@@ -23,3 +23,19 @@ class RentalShop:
             else:
                 self.queue.append(visitor)
                 return False
+
+    class LiftStation:
+        def __init__(self):
+            self.capacity = 18
+            self.current = 0
+            self.queue = deque()
+            self.lock = threading.Lock()
+
+        def use_lift(self, visitor):
+            with self.lock:
+                if self.current < self.capacity:
+                    self.current += 1
+                    return True
+                else:
+                    self.queue.append(visitor)
+                    return False
