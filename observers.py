@@ -52,3 +52,34 @@ class StatsManager:
         elif event_type == "visitor_type":
             if data in self.visitor_types:
                 self.visitor_types[data] += 1
+
+    def average_wait(self, area):
+        times = self.wait_times[area]
+
+        if len(times) == 0:
+            return 0
+
+        return sum(times) / len(times)
+
+    def max_queue(self, area):
+        queues = self.queue_lengths[area]
+
+        if len(queues) == 0:
+            return 0
+
+        return max(queues)
+
+    def show_summary(self):
+        print("\n--- SIMULATION SUMMARY ---")
+        print("Average rental wait:", self.average_wait("rental"))
+        print("Average lift wait:", self.average_wait("lift"))
+        print("Average cafe wait:", self.average_wait("cafe"))
+
+        print("Max rental queue:", self.max_queue("rental"))
+        print("Max lift queue:", self.max_queue("lift"))
+        print("Max cafe queue:", self.max_queue("cafe"))
+
+        print("Total runs:", self.total_runs)
+        print("Cafe visits:", self.cafe_visits)
+        print("Falls:", self.falls)
+        print("Visitor types:", self.visitor_types)
