@@ -1,24 +1,9 @@
+import random
+
 from observers import StatsManager
-
-
-class FakeVisitor:
-    def __init__(self, visitor_id, resort):
-        self.visitor_id = visitor_id
-        self.resort = resort
-
-    def start(self):
-        print(f"Visitor {self.visitor_id} started")
-
-        self.resort.stats.update("visitor_type", "skier")
-        self.resort.stats.update("rental_wait", 2)
-        self.resort.stats.update("rental_queue", 3)
-        self.resort.stats.update("lift_wait", 5)
-        self.resort.stats.update("lift_queue", 4)
-        self.resort.stats.update("run", 1)
-        self.resort.stats.update("cafe", 1)
-
-    def join(self):
-        print(f"Visitor {self.visitor_id} finished")
+from visitor import Visitor
+from resources import RentalShop, LiftStation, Cafe, Slope
+from config import NUM_VISITORS, VISITOR_TYPES, NUM_SLOPES
 
 
 class Resort:
@@ -27,13 +12,36 @@ class Resort:
         self.visitors = []
         self.is_open = False
 
+        self.rental_shop = None
+        self.lift_station = None
+        self.cafe = None
+        self.slopes = []
+
     def create_resources(self):
-        # This will connect to Marie's resource classes later
-        pass
+        self.rental_shop = RentalShop()
+        self.lift_station = LiftStation()
+        self.cafe = Cafe()
+        self.slopes = [Slope(i) for i in range(NUM_SLOPES)]
+
+        self.rental_shop.add_observer(self.stats)
+        self.lift_station.add_observer(self.stats)
+        self.cafe.add_observer(self.stats)
+
+        for slope in self.slopes:
+            slope.add_observer(self.stats)
 
     def create_visitors(self):
-        # Using fake visitors until Sofia finishes Visitor class
-        self.visitors = [FakeVisitor(i, self) for i in range(5)]
+        for i in range(NUM_VISITORS):
+            visitor_type = random.choice(VISITOR_TYPES)
+
+            visitor = Visitor(
+                visitor_id=i,
+                visitor_type=visitor_type,
+                resort=self
+            )
+
+            self.visitors.append(visitor)
+            self.stats.update("visitor_type", visitor_type)
 
     def start_threads(self):
         for visitor in self.visitors:
@@ -45,9 +53,15 @@ class Resort:
 
     def start_simulation(self):
         self.is_open = True
+
+        print("Opening ski resort simulation...")
+
         self.create_resources()
         self.create_visitors()
         self.start_threads()
         self.join_threads()
+
         self.is_open = False
+
+        print("Closing ski resort simulation...")
         self.stats.show_summary()

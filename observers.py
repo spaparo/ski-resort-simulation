@@ -21,7 +21,7 @@ class StatsManager:
             "snowboarder": 0
         }
 
-    def update(self, event_type, data):
+    def update(self, event_type, data=None):
         if event_type == "rental_wait":
             self.wait_times["rental"].append(data)
 
@@ -50,11 +50,21 @@ class StatsManager:
             self.falls += 1
 
         elif event_type == "visitor_type":
-            if data in self.visitor_types:
-                self.visitor_types[data] += 1
+            self.record_visitor_type(data)
+
+    def record_visitor_type(self, data):
+        visitor_type = data
+
+        if hasattr(data, "visitor_type"):
+            visitor_type = data.visitor_type
+        elif hasattr(data, "type"):
+            visitor_type = data.type
+
+        if visitor_type in self.visitor_types:
+            self.visitor_types[visitor_type] += 1
 
     def average_wait(self, area):
-        times = self.wait_times[area]
+        times = self.wait_times.get(area, [])
 
         if len(times) == 0:
             return 0
@@ -62,7 +72,7 @@ class StatsManager:
         return sum(times) / len(times)
 
     def max_queue(self, area):
-        queues = self.queue_lengths[area]
+        queues = self.queue_lengths.get(area, [])
 
         if len(queues) == 0:
             return 0
@@ -71,9 +81,10 @@ class StatsManager:
 
     def show_summary(self):
         print("\n--- SIMULATION SUMMARY ---")
-        print("Average rental wait:", self.average_wait("rental"))
-        print("Average lift wait:", self.average_wait("lift"))
-        print("Average cafe wait:", self.average_wait("cafe"))
+
+        print("Average rental wait:", round(self.average_wait("rental"), 2))
+        print("Average lift wait:", round(self.average_wait("lift"), 2))
+        print("Average cafe wait:", round(self.average_wait("cafe"), 2))
 
         print("Max rental queue:", self.max_queue("rental"))
         print("Max lift queue:", self.max_queue("lift"))
