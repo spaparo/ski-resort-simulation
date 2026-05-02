@@ -3,12 +3,15 @@ import random
 from observers import StatsManager
 from visitor import Visitor
 from resources import RentalShop, LiftStation, Cafe, Slope
+from database_manager import DatabaseManager
 from config import NUM_VISITORS, VISITOR_TYPES, NUM_SLOPES
 
 
 class Resort:
     def __init__(self):
         self.stats = StatsManager()
+        self.database = DatabaseManager()
+
         self.visitors = []
         self.is_open = False
 
@@ -41,7 +44,13 @@ class Resort:
             )
 
             self.visitors.append(visitor)
+
+            # Stats
             self.stats.update("visitor_type", visitor_type)
+
+            # Database
+            self.database.save_visitor(visitor)
+            self.database.log_event(visitor.visitor_id, "created", "resort", 0)
 
     def start_threads(self):
         for visitor in self.visitors:
@@ -56,12 +65,17 @@ class Resort:
 
         print("Opening ski resort simulation...")
 
+        self.database.create_tables()
+
         self.create_resources()
         self.create_visitors()
+
         self.start_threads()
         self.join_threads()
 
         self.is_open = False
 
         print("Closing ski resort simulation...")
+
         self.stats.show_summary()
+        self.database.close()
