@@ -35,7 +35,7 @@ class RidingLiftState(State):
     def handle(self, visitor):
         visitor.log("is riding the lift up the mountain...")
         time.sleep(random.uniform(0.5, 1.0))
-        visitor.log("has reached the top!")
+        visitor.log("has reached the top")
         return SlopeState()
 
 
