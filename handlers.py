@@ -43,20 +43,18 @@ class LiftHandler(Handler):
             return False
 
 
-class SlopeHandler(Handler):
-    def __init__(self, slope, db, next_handler=None):
-        super().__init__(next_handler)
-        self.slope = slope
-        self.db = db
+def handle(self, visitor):
+    success = self.slope.go_down(visitor)
 
-    def handle(self, visitor):
-        success = self.slope.go_down(visitor)
+    if success:
+        import random
+        if random.random() < 0.08:
+            self.db.log_event(visitor.id, "fall", "Slope", 0)
 
-        if success:
-            self.db.log_event(visitor.id, "slope", "Slope", 0)
-            return super().handle(visitor)
-        else:
-            return False
+        self.db.log_event(visitor.id, "slope", "Slope", 0)
+        return super().handle(visitor)
+    else:
+        return False
 
 
 class CafeHandler(Handler):
