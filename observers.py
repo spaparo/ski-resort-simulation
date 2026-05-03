@@ -30,6 +30,7 @@ class StatsManager:
 
         elif event_type == "cafe_wait":
             self.wait_times["cafe"].append(data)
+            self.cafe_visits += 1
 
         elif event_type == "rental_queue":
             self.queue_lengths["rental"].append(data)
@@ -94,3 +95,39 @@ class StatsManager:
         print("Cafe visits:", self.cafe_visits)
         print("Falls:", self.falls)
         print("Visitor types:", self.visitor_types)
+
+    def show_graphs(self):
+        import matplotlib.pyplot as plt
+
+        areas = ["rental", "lift", "cafe"]
+
+        avg_waits = [self.average_wait(area) for area in areas]
+        max_queues = [self.max_queue(area) for area in areas]
+
+        plt.figure()
+        plt.bar(areas, avg_waits)
+        plt.title("Average Waiting Time by Area")
+        plt.xlabel("Area")
+        plt.ylabel("Average Wait Time")
+        plt.show()
+
+        plt.figure()
+        plt.bar(areas, max_queues)
+        plt.title("Maximum Queue Length by Area")
+        plt.xlabel("Area")
+        plt.ylabel("Max Queue Length")
+        plt.show()
+
+        plt.figure()
+        plt.bar(["Runs", "Cafe Visits", "Falls"],
+                [self.total_runs, self.cafe_visits, self.falls])
+        plt.title("Simulation Activity Summary")
+        plt.ylabel("Count")
+        plt.show()
+
+        plt.figure()
+        plt.bar(self.visitor_types.keys(), self.visitor_types.values())
+        plt.title("Visitor Types")
+        plt.xlabel("Visitor Type")
+        plt.ylabel("Count")
+        plt.show()

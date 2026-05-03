@@ -78,4 +78,6 @@ class Resort:
         print("Closing ski resort simulation...")
 
         self.stats.show_summary()
+        self.stats.show_graphs()
         self.database.close()
+
