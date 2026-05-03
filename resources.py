@@ -23,13 +23,13 @@ class RentalShop:
 
     def rent_equipment(self, visitor):
         with self.lock:
-            if visitor.type == "skier" and self.skis_available > 0 and self.staff_available > 0:
+            if visitor.visitor_type == "skier" and self.skis_available > 0 and self.staff_available > 0:
                 self.skis_available -= 1
                 self.staff_available -= 1
                 self.notify_observers("rental_wait", 0.0)
                 return True
 
-            elif visitor.type == "snowboarder" and self.snowboards_available > 0 and self.staff_available > 0:
+            elif visitor.visitor_type == "snowboarder" and self.snowboards_available > 0 and self.staff_available > 0:
                 self.snowboards_available -= 1
                 self.staff_available -= 1
                 self.notify_observers("rental_wait", 0.0)
@@ -42,7 +42,7 @@ class RentalShop:
 
     def return_equipment(self, visitor):
         with self.lock:
-            if visitor.type == "skier":
+            if visitor.visitor_type == "skier":
                 self.skis_available += 1
             else:
                 self.snowboards_available += 1
@@ -105,6 +105,7 @@ class Cafe:
             if self.current < self.capacity:
                 self.current += 1
                 self.notify_observers("cafe_wait", 0.0)
+                self.notify_observers("cafe", None)
             else:
                 self.queue.append(visitor)
                 self.notify_observers("cafe_queue", len(self.queue))
@@ -151,7 +152,7 @@ class Slope:
         fall = False
         if random.random() < 0.08:
             fall = True
-            print(f"Visitor {visitor.id} fell!")
+            print(f"Visitor {visitor.visitor_id} fell!")
             self.notify_observers("fall")
             time.sleep(2.0)
 
