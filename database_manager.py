@@ -8,7 +8,6 @@ class DatabaseManager:
         self.cursor = self.conn.cursor()
         self.lock = threading.Lock()
 
-
     def create_tables(self):
         with self.lock:
             self.cursor.execute("""
@@ -30,16 +29,14 @@ class DatabaseManager:
 
             self.conn.commit()
 
-
     def save_visitor(self, visitor):
         with self.lock:
             self.cursor.execute("""
                 INSERT INTO visitors (id, type)
                 VALUES (?, ?)
-            """, (visitor.id, visitor.type))
+            """, (visitor.visitor_id, visitor.visitor_type))
 
             self.conn.commit()
-
 
     def log_event(self, visitor_id, event_type, area, wait_time):
         with self.lock:
@@ -49,7 +46,6 @@ class DatabaseManager:
             """, (visitor_id, event_type, area, wait_time))
 
             self.conn.commit()
-
 
     def close(self):
         self.conn.close()
