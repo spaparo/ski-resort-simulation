@@ -18,7 +18,7 @@ class ArrivingState(State):
 class RentingState(State):
     def handle(self, visitor):
         visitor.log("is getting equipment at the rental shop...")
-        time.sleep(random.uniform(0.5, 1.0))
+        visitor.resort.rental_shop.rent_equipment(visitor)
         visitor.log("has collected gear. Moving to the lift...")
         return WaitingLiftState()
 
@@ -26,7 +26,7 @@ class RentingState(State):
 class WaitingLiftState(State):
     def handle(self, visitor):
         visitor.log("is waiting in the lift queue...")
-        time.sleep(random.uniform(0.3, 0.8))
+        visitor.resort.lift_station.use_lift(visitor)
         visitor.log("got on the lift!")
         return RidingLiftState()
 
@@ -45,7 +45,7 @@ class SlopeState(State):
         cost = visitor.strategy.energy_cost()
 
         visitor.log(f"starting run #{visitor.runs_completed + 1} on {slope}")
-        time.sleep(random.uniform(0.6, 1.2))
+        visitor.resort.slopes[0].go_down(visitor)
 
         energy_before = visitor.energy
         visitor.energy = max(0, visitor.energy - cost)
@@ -71,7 +71,7 @@ class CafeState(State):
 
     def handle(self, visitor):
         visitor.log("is taking a break at the cafe...")
-        time.sleep(random.uniform(0.5, 1.0))
+        visitor.resort.cafe.visit(visitor)
 
         energy_before = visitor.energy
         visitor.energy = min(100, visitor.energy + self.ENERGY_RESTORE)
@@ -91,7 +91,7 @@ class CafeState(State):
 class ExitState(State):
     def handle(self, visitor):
         visitor.log("is returning equipment and leaving...")
-        time.sleep(0.2)
+        visitor.resort.rental_shop.return_equipment(visitor)
         visitor.log(
             f"--- SUMMARY --- "
             f"runs: {visitor.runs_completed} | "
