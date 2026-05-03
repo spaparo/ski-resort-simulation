@@ -9,7 +9,8 @@ class State:
 
 class ArrivingState(State):
     def handle(self, visitor):
-        visitor.log("arrives at the resort. Goes to rentals...")
+        visitor.log("arrives at the resort.")
+        visitor.log("moving to rental shop...")
         time.sleep(random.uniform(0.3, 0.7))
         return RentingState()
 
@@ -19,15 +20,17 @@ class RentingState(State):
         visitor.log("is getting equipment at the rental shop...")
         # TODO: replace with Marie's method -> rental_shop.rent_equipment(visitor)
         time.sleep(random.uniform(0.5, 1.0))
-        visitor.log("has collected gear. Heading to the lift!")
+        visitor.log("has collected gear.")
+        visitor.log("moving to the lift...")
         return WaitingLiftState()
 
 
 class WaitingLiftState(State):
     def handle(self, visitor):
-        visitor.log("is waiting for the lift...")
+        visitor.log("is waiting in the lift queue...")
         # TODO: replace with Marie's method -> lift.use_lift(visitor)
         time.sleep(random.uniform(0.3, 0.8))
+        visitor.log("got on the lift!")
         return RidingLiftState()
 
 
@@ -48,18 +51,21 @@ class SlopeState(State):
         # TODO: replace with Marie's method -> slope.go_down(visitor)
         time.sleep(random.uniform(0.6, 1.2))
 
+        energy_before= visitor.energy
         visitor.energy = max(0, visitor.energy - cost)
         visitor.runs_completed += 1
 
         visitor.log(f"finished run #{visitor.runs_completed}. Energy: {visitor.energy}/100")
 
         if visitor.strategy.should_leave(visitor):
-            visitor.log("is exhausted or satisfied. Time to leave!")
+            visitor.log("is too tired or has done enough runs. Time to leave!")
             return ExitState()
 
         if visitor.strategy.wants_cafe():
+            visitor.log("going to cafe...")
             return CafeState()
 
+        visitor.log("heading back to the lift for another run!")
         return WaitingLiftState()
 
 
@@ -77,6 +83,7 @@ class CafeState(State):
         visitor.log(f"finished cafe break #{visitor.cafe_visits}. Energy restored to {visitor.energy}/100")
 
         if visitor.strategy.should_leave(visitor):
+            visitor.log("still too tired after cafe. Heading home...")
             return ExitState()
 
         return WaitingLiftState()
@@ -84,12 +91,13 @@ class CafeState(State):
 
 class ExitState(State):
     def handle(self, visitor):
+        visitor.log("is returning equipment and leaving the resort...")
         # TODO: replace with Marie's method -> rental_shop.return_equipment(visitor)
+        time.sleep(0.2)
         visitor.log(
             f"is leaving. Summary -> "
             f"runs: {visitor.runs_completed}, "
             f"cafe visits: {visitor.cafe_visits}, "
             f"energy left: {visitor.energy}/100"
         )
-        time.sleep(0.2)
         return None
