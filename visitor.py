@@ -4,7 +4,8 @@ from states import ArrivingState
 from strategies import SkierStrategy, SnowboarderStrategy
 
 class Visitor(Thread):
-    def __init__(self, visitor_id, visitor_type):
+    def __init__(self, visitor_id, visitor_type, resort):
+        self.resort = resort
         self.visitor_id = visitor_id
         self.visitor_type = visitor_type
         self.energy = 100
