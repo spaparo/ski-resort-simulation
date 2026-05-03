@@ -4,7 +4,7 @@ import random
 
 class State:
     def handle(self, visitor):
-        pass
+        raise NotImplementedError
 
 
 class ArrivingState(State):
