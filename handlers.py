@@ -21,10 +21,9 @@ class RentalHandler(Handler):
         success = self.rental_shop.rent_equipment(visitor)
 
         if success:
-            self.db.log_event(visitor.id, "rental", "RentalShop", 0)
+            self.db.log_event(visitor.visitor_id, "rental", "RentalShop", 0)
             return super().handle(visitor)
-        else:
-            return False
+        return False
 
 
 class LiftHandler(Handler):
@@ -37,23 +36,25 @@ class LiftHandler(Handler):
         success = self.lift.use_lift(visitor)
 
         if success:
-            self.db.log_event(visitor.id, "lift", "LiftStation", 0)
+            self.db.log_event(visitor.visitor_id, "lift", "LiftStation", 0)
             return super().handle(visitor)
-        else:
-            return False
+        return False
 
 
-def handle(self, visitor):
-    success = self.slope.go_down(visitor)
+class SlopeHandler(Handler):
+    def __init__(self, slope, db, next_handler=None):
+        super().__init__(next_handler)
+        self.slope = slope
+        self.db = db
 
-    if success:
-        import random
-        if random.random() < 0.08:
-            self.db.log_event(visitor.id, "fall", "Slope", 0)
+    def handle(self, visitor):
+        success, fell = self.slope.go_down(visitor)
 
-        self.db.log_event(visitor.id, "slope", "Slope", 0)
-        return super().handle(visitor)
-    else:
+        if success:
+            self.db.log_event(visitor.visitor_id, "slope", "Slope", 0)
+            if fell:
+                self.db.log_event(visitor.visitor_id, "fall", "Slope", 0)
+            return super().handle(visitor)
         return False
 
 
@@ -67,12 +68,11 @@ class CafeHandler(Handler):
         if random.random() < 0.35:
             success = self.cafe.visit(visitor)
             if success:
-                self.db.log_event(visitor.id, "cafe", "Cafe", 0)
+                self.db.log_event(visitor.visitor_id, "cafe", "Cafe", 0)
             else:
                 return False
 
         return super().handle(visitor)
-
 
 
 class ExitHandler(Handler):
@@ -81,6 +81,6 @@ class ExitHandler(Handler):
         self.db = db
 
     def handle(self, visitor):
-        print(f"Visitor {visitor.id} finished the resort")
-        self.db.log_event(visitor.id, "completed", "resort", 0)
+        print(f"Visitor {visitor.visitor_id} finished the resort")
+        self.db.log_event(visitor.visitor_id, "completed", "resort", 0)
         return True

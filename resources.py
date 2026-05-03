@@ -143,15 +143,16 @@ class Slope:
                 self.current += 1
             else:
                 self.queue.append(visitor)
-                return False
+                self.notify_observers("slope_queue", len(self.queue))
+                return False, False
 
         self.notify_observers("run")
 
         time.sleep(random.uniform(3.0, 6.0))
 
-        fall = False
+        fell = False
         if random.random() < 0.08:
-            fall = True
+            fell = True
             print(f"Visitor {visitor.visitor_id} fell!")
             self.notify_observers("fall")
             time.sleep(2.0)
@@ -162,4 +163,4 @@ class Slope:
             if self.queue:
                 self.queue.popleft()
 
-        return True
+        return True, fell
