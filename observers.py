@@ -21,6 +21,8 @@ class StatsManager:
             "snowboarder": 0
         }
 
+        self.visitor_summaries = []
+
     def update(self, event_type, data=None):
         if event_type == "rental_wait":
             self.wait_times["rental"].append(data)
@@ -30,7 +32,6 @@ class StatsManager:
 
         elif event_type == "cafe_wait":
             self.wait_times["cafe"].append(data)
-            self.cafe_visits += 1
 
         elif event_type == "rental_queue":
             self.queue_lengths["rental"].append(data)
@@ -50,8 +51,15 @@ class StatsManager:
         elif event_type == "fall":
             self.falls += 1
 
+
         elif event_type == "visitor_type":
+
             self.record_visitor_type(data)
+
+
+        elif event_type == "visitor_summary":
+
+            self.visitor_summaries.append(data)
 
     def record_visitor_type(self, data):
         visitor_type = data
