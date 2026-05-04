@@ -24,7 +24,7 @@ class Resort:
         self.rental_shop = RentalShop()
         self.lift_station = LiftStation()
         self.cafe = Cafe()
-        self.slopes = [Slope(i) for i in range(NUM_SLOPES)]
+        self.slopes = [Slope() for _ in range(NUM_SLOPES)]
 
         self.rental_shop.add_observer(self.stats)
         self.lift_station.add_observer(self.stats)
