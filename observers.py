@@ -1,3 +1,7 @@
+import os
+import matplotlib.pyplot as plt
+
+
 class StatsManager:
     def __init__(self):
         self.wait_times = {
@@ -51,14 +55,10 @@ class StatsManager:
         elif event_type == "fall":
             self.falls += 1
 
-
         elif event_type == "visitor_type":
-
             self.record_visitor_type(data)
 
-
         elif event_type == "visitor_summary":
-
             self.visitor_summaries.append(data)
 
     def record_visitor_type(self, data):
@@ -105,107 +105,226 @@ class StatsManager:
         print("Visitor types:", self.visitor_types)
 
     def show_graphs(self):
-        import matplotlib.pyplot as plt
-        import os
-
         os.makedirs("graphs", exist_ok=True)
 
+        self.plot_average_wait_times()
+        self.plot_max_queue_lengths()
+        self.plot_activity_summary()
+        self.plot_visitor_type_distribution()
+        self.plot_queue_trend()
+        self.plot_runs_vs_energy()
+        self.plot_runs_vs_cafe_visits()
+
+        print("\nGraphs saved in the 'graphs' folder.")
+
+    def add_bar_labels(self, bars):
+        for bar in bars:
+            height = bar.get_height()
+            plt.text(
+                bar.get_x() + bar.get_width() / 2,
+                height,
+                str(round(height, 2)),
+                ha="center",
+                va="bottom",
+                fontsize=10
+            )
+
+    def plot_average_wait_times(self):
+        areas = ["rental", "lift", "cafe"]
+        averages = [self.average_wait(area) for area in areas]
+
+        plt.figure(figsize=(8, 5))
+        bars = plt.bar(
+            ["Rental", "Lift", "Cafe"],
+            averages
+        )
+
+        self.add_bar_labels(bars)
+
+        plt.title("Average Waiting Time by Resort Area", fontsize=15, fontweight="bold")
+        plt.xlabel("Area")
+        plt.ylabel("Average Wait Time")
+        plt.grid(axis="y", alpha=0.3)
+        plt.tight_layout()
+        plt.savefig("graphs/average_wait_times.png", dpi=300)
+        plt.close()
+
+    def plot_max_queue_lengths(self):
         areas = ["rental", "lift", "cafe"]
         max_queues = [self.max_queue(area) for area in areas]
 
-        # 1. Max queue length bar chart
-        plt.figure()
-        plt.bar(areas, max_queues)
-        plt.title("Maximum Queue Length by Area")
+        plt.figure(figsize=(8, 5))
+        bars = plt.bar(
+            ["Rental", "Lift", "Cafe"],
+            max_queues
+        )
+
+        self.add_bar_labels(bars)
+
+        plt.title("Maximum Queue Length by Resort Area", fontsize=15, fontweight="bold")
         plt.xlabel("Area")
-        plt.ylabel("Max Queue Length")
-        plt.savefig("graphs/max_queue_length.png")
-        plt.show()
+        plt.ylabel("Maximum Queue Length")
+        plt.grid(axis="y", alpha=0.3)
+        plt.tight_layout()
+        plt.savefig("graphs/max_queue_length.png", dpi=300)
+        plt.close()
 
-        # 2. Activity summary bar chart
-        plt.figure()
-        plt.bar(
-            ["Runs", "Cafe Visits", "Falls"],
-            [self.total_runs, self.cafe_visits, self.falls]
-        )
-        plt.title("Simulation Activity Summary")
-        plt.ylabel("Count")
-        plt.savefig("graphs/activity_summary.png")
-        plt.show()
+    def plot_activity_summary(self):
+        labels = ["Runs", "Cafe Visits", "Falls"]
+        values = [self.total_runs, self.cafe_visits, self.falls]
 
-        # 3. Visitor type distribution bar chart
-        plt.figure()
-        plt.bar(
-            list(self.visitor_types.keys()),
-            list(self.visitor_types.values())
-        )
-        plt.title("Visitor Type Distribution")
+        plt.figure(figsize=(8, 5))
+        bars = plt.bar(labels, values)
+
+        self.add_bar_labels(bars)
+
+        plt.title("Simulation Activity Summary", fontsize=15, fontweight="bold")
+        plt.xlabel("Activity")
+        plt.ylabel("Total Count")
+        plt.grid(axis="y", alpha=0.3)
+        plt.tight_layout()
+        plt.savefig("graphs/activity_summary.png", dpi=300)
+        plt.close()
+
+    def plot_visitor_type_distribution(self):
+        labels = ["Skier", "Snowboarder"]
+        values = [
+            self.visitor_types["skier"],
+            self.visitor_types["snowboarder"]
+        ]
+
+        plt.figure(figsize=(8, 5))
+        bars = plt.bar(labels, values)
+
+        self.add_bar_labels(bars)
+
+        plt.title("Visitor Type Distribution", fontsize=15, fontweight="bold")
         plt.xlabel("Visitor Type")
         plt.ylabel("Number of Visitors")
-        plt.savefig("graphs/visitor_types.png")
-        plt.show()
+        plt.grid(axis="y", alpha=0.3)
+        plt.tight_layout()
+        plt.savefig("graphs/visitor_type_distribution.png", dpi=300)
+        plt.close()
 
-        # 4. Line graph: queue length trend
-        plt.figure()
+    def plot_queue_trend(self):
+        plt.figure(figsize=(10, 6))
+
+        areas = ["rental", "lift", "cafe"]
+
         for area in areas:
             values = self.queue_lengths[area]
-            if len(values) > 0:
-                x = list(range(1, len(values) + 1))
-                plt.plot(x, values, marker="o", label=area)
 
-        plt.title("Queue Length Trend During Simulation")
+            if len(values) > 0:
+                x_values = list(range(1, len(values) + 1))
+
+                plt.plot(
+                    x_values,
+                    values,
+                    marker="o",
+                    markersize=3,
+                    linewidth=2,
+                    label=area.capitalize()
+                )
+
+        plt.title("Queue Length Trend During Simulation", fontsize=15, fontweight="bold")
         plt.xlabel("Observation Number")
         plt.ylabel("Queue Length")
         plt.legend()
-        plt.savefig("graphs/queue_trend.png")
-        plt.show()
+        plt.grid(True, alpha=0.3)
+        plt.tight_layout()
+        plt.savefig("graphs/queue_trend.png", dpi=300)
+        plt.close()
 
-        # 5. Scatter plot: runs completed vs energy left
-        if len(self.visitor_summaries) > 0:
-            skier_runs = []
-            skier_energy = []
-            snowboarder_runs = []
-            snowboarder_energy = []
+    def plot_runs_vs_energy(self):
+        if len(self.visitor_summaries) == 0:
+            return
 
-            for visitor in self.visitor_summaries:
-                if visitor["type"] == "skier":
-                    skier_runs.append(visitor["runs"])
-                    skier_energy.append(visitor["energy_left"])
-                else:
-                    snowboarder_runs.append(visitor["runs"])
-                    snowboarder_energy.append(visitor["energy_left"])
+        skier_runs = []
+        skier_energy = []
+        snowboarder_runs = []
+        snowboarder_energy = []
 
-            plt.figure()
-            plt.scatter(skier_runs, skier_energy, label="Skier")
-            plt.scatter(snowboarder_runs, snowboarder_energy, label="Snowboarder")
-            plt.title("Runs Completed vs Energy Left")
-            plt.xlabel("Runs Completed")
-            plt.ylabel("Energy Left")
-            plt.legend()
-            plt.savefig("graphs/runs_vs_energy.png")
-            plt.show()
+        for visitor in self.visitor_summaries:
+            visitor_type = visitor.get("type")
+            runs = visitor.get("runs", 0)
+            energy_left = visitor.get("energy_left", 0)
 
-        # 6. Scatter plot: runs completed vs cafe visits
-        if len(self.visitor_summaries) > 0:
-            skier_runs = []
-            skier_cafe = []
-            snowboarder_runs = []
-            snowboarder_cafe = []
+            if visitor_type == "skier":
+                skier_runs.append(runs)
+                skier_energy.append(energy_left)
 
-            for visitor in self.visitor_summaries:
-                if visitor["type"] == "skier":
-                    skier_runs.append(visitor["runs"])
-                    skier_cafe.append(visitor["cafe_visits"])
-                else:
-                    snowboarder_runs.append(visitor["runs"])
-                    snowboarder_cafe.append(visitor["cafe_visits"])
+            elif visitor_type == "snowboarder":
+                snowboarder_runs.append(runs)
+                snowboarder_energy.append(energy_left)
 
-            plt.figure()
-            plt.scatter(skier_runs, skier_cafe, label="Skier")
-            plt.scatter(snowboarder_runs, snowboarder_cafe, label="Snowboarder")
-            plt.title("Runs Completed vs Cafe Visits")
-            plt.xlabel("Runs Completed")
-            plt.ylabel("Cafe Visits")
-            plt.legend()
-            plt.savefig("graphs/runs_vs_cafe.png")
-            plt.show()
+        plt.figure(figsize=(8, 5))
+
+        plt.scatter(
+            skier_runs,
+            skier_energy,
+            label="Skier",
+            alpha=0.7
+        )
+
+        plt.scatter(
+            snowboarder_runs,
+            snowboarder_energy,
+            label="Snowboarder",
+            alpha=0.7
+        )
+
+        plt.title("Runs Completed vs Energy Left", fontsize=15, fontweight="bold")
+        plt.xlabel("Runs Completed")
+        plt.ylabel("Energy Left")
+        plt.legend()
+        plt.grid(True, alpha=0.3)
+        plt.tight_layout()
+        plt.savefig("graphs/runs_vs_energy.png", dpi=300)
+        plt.close()
+
+    def plot_runs_vs_cafe_visits(self):
+        if len(self.visitor_summaries) == 0:
+            return
+
+        skier_runs = []
+        skier_cafe = []
+        snowboarder_runs = []
+        snowboarder_cafe = []
+
+        for visitor in self.visitor_summaries:
+            visitor_type = visitor.get("type")
+            runs = visitor.get("runs", 0)
+            cafe_visits = visitor.get("cafe_visits", 0)
+
+            if visitor_type == "skier":
+                skier_runs.append(runs)
+                skier_cafe.append(cafe_visits)
+
+            elif visitor_type == "snowboarder":
+                snowboarder_runs.append(runs)
+                snowboarder_cafe.append(cafe_visits)
+
+        plt.figure(figsize=(8, 5))
+
+        plt.scatter(
+            skier_runs,
+            skier_cafe,
+            label="Skier",
+            alpha=0.7
+        )
+
+        plt.scatter(
+            snowboarder_runs,
+            snowboarder_cafe,
+            label="Snowboarder",
+            alpha=0.7
+        )
+
+        plt.title("Runs Completed vs Cafe Visits", fontsize=15, fontweight="bold")
+        plt.xlabel("Runs Completed")
+        plt.ylabel("Cafe Visits")
+        plt.legend()
+        plt.grid(True, alpha=0.3)
+        plt.tight_layout()
+        plt.savefig("graphs/runs_vs_cafe_visits.png", dpi=300)
+        plt.close()
