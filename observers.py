@@ -107,11 +107,11 @@ class StatsManager:
     def show_graphs(self):
         os.makedirs("graphs", exist_ok=True)
 
-        self.plot_average_wait_times()
-        self.plot_max_queue_lengths()
+        self.plot_main_bottleneck()
+        self.plot_queue_trend()
         self.plot_activity_summary()
         self.plot_visitor_type_distribution()
-        self.plot_queue_trend()
+        self.plot_average_wait_times()
         self.plot_runs_vs_energy()
         self.plot_runs_vs_cafe_visits()
 
@@ -120,96 +120,57 @@ class StatsManager:
     def add_bar_labels(self, bars):
         for bar in bars:
             height = bar.get_height()
+
             plt.text(
                 bar.get_x() + bar.get_width() / 2,
                 height,
                 str(round(height, 2)),
                 ha="center",
                 va="bottom",
-                fontsize=10
+                fontsize=11,
+                fontweight="bold"
             )
 
-    def plot_average_wait_times(self):
-        areas = ["rental", "lift", "cafe"]
-        averages = [self.average_wait(area) for area in areas]
-
-        plt.figure(figsize=(8, 5))
-        bars = plt.bar(
-            ["Rental", "Lift", "Cafe"],
-            averages
+    def add_caption(self, text):
+        plt.figtext(
+            0.5,
+            -0.02,
+            text,
+            ha="center",
+            fontsize=10,
+            wrap=True
         )
 
-        self.add_bar_labels(bars)
-
-        plt.title("Average Waiting Time by Resort Area", fontsize=15, fontweight="bold")
-        plt.xlabel("Area")
-        plt.ylabel("Average Wait Time")
-        plt.grid(axis="y", alpha=0.3)
+    def save_graph(self, filename):
         plt.tight_layout()
-        plt.savefig("graphs/average_wait_times.png", dpi=300)
+        plt.savefig(f"graphs/{filename}", dpi=300, bbox_inches="tight")
         plt.close()
 
-    def plot_max_queue_lengths(self):
-        areas = ["rental", "lift", "cafe"]
-        max_queues = [self.max_queue(area) for area in areas]
+    def plot_main_bottleneck(self):
+        areas = ["Rental", "Lift", "Cafe"]
+        keys = ["rental", "lift", "cafe"]
+        max_queues = [self.max_queue(area) for area in keys]
 
-        plt.figure(figsize=(8, 5))
-        bars = plt.bar(
-            ["Rental", "Lift", "Cafe"],
-            max_queues
-        )
+        plt.figure(figsize=(10, 6))
+        bars = plt.bar(areas, max_queues)
 
         self.add_bar_labels(bars)
 
-        plt.title("Maximum Queue Length by Resort Area", fontsize=15, fontweight="bold")
-        plt.xlabel("Area")
+        plt.title("Main Bottleneck: Maximum Queue Length by Resort Area", fontsize=16, fontweight="bold")
+        plt.xlabel("Resort Area")
         plt.ylabel("Maximum Queue Length")
         plt.grid(axis="y", alpha=0.3)
-        plt.tight_layout()
-        plt.savefig("graphs/max_queue_length.png", dpi=300)
-        plt.close()
 
-    def plot_activity_summary(self):
-        labels = ["Runs", "Cafe Visits", "Falls"]
-        values = [self.total_runs, self.cafe_visits, self.falls]
+        self.add_caption(
+            "Interpretation: The lift queue is the largest bottleneck, meaning visitor demand exceeded lift capacity more than any other resort area."
+        )
 
-        plt.figure(figsize=(8, 5))
-        bars = plt.bar(labels, values)
-
-        self.add_bar_labels(bars)
-
-        plt.title("Simulation Activity Summary", fontsize=15, fontweight="bold")
-        plt.xlabel("Activity")
-        plt.ylabel("Total Count")
-        plt.grid(axis="y", alpha=0.3)
-        plt.tight_layout()
-        plt.savefig("graphs/activity_summary.png", dpi=300)
-        plt.close()
-
-    def plot_visitor_type_distribution(self):
-        labels = ["Skier", "Snowboarder"]
-        values = [
-            self.visitor_types["skier"],
-            self.visitor_types["snowboarder"]
-        ]
-
-        plt.figure(figsize=(8, 5))
-        bars = plt.bar(labels, values)
-
-        self.add_bar_labels(bars)
-
-        plt.title("Visitor Type Distribution", fontsize=15, fontweight="bold")
-        plt.xlabel("Visitor Type")
-        plt.ylabel("Number of Visitors")
-        plt.grid(axis="y", alpha=0.3)
-        plt.tight_layout()
-        plt.savefig("graphs/visitor_type_distribution.png", dpi=300)
-        plt.close()
+        self.save_graph("01_main_bottleneck_queue.png")
 
     def plot_queue_trend(self):
-        plt.figure(figsize=(10, 6))
-
         areas = ["rental", "lift", "cafe"]
+
+        plt.figure(figsize=(11, 6))
 
         for area in areas:
             values = self.queue_lengths[area]
@@ -226,14 +187,81 @@ class StatsManager:
                     label=area.capitalize()
                 )
 
-        plt.title("Queue Length Trend During Simulation", fontsize=15, fontweight="bold")
-        plt.xlabel("Observation Number")
+        plt.title("Queue Length Trend During the Simulation", fontsize=16, fontweight="bold")
+        plt.xlabel("Queue Observation Number")
         plt.ylabel("Queue Length")
         plt.legend()
         plt.grid(True, alpha=0.3)
-        plt.tight_layout()
-        plt.savefig("graphs/queue_trend.png", dpi=300)
-        plt.close()
+
+        self.add_caption(
+            "Interpretation: Queue length grows when more visitor threads request a resource than the available capacity can handle."
+        )
+
+        self.save_graph("02_queue_growth_trend.png")
+
+    def plot_activity_summary(self):
+        labels = ["Slope Runs", "Cafe Visits", "Falls"]
+        values = [self.total_runs, self.cafe_visits, self.falls]
+
+        plt.figure(figsize=(10, 6))
+        bars = plt.bar(labels, values)
+
+        self.add_bar_labels(bars)
+
+        plt.title("Visitor Activity Summary", fontsize=16, fontweight="bold")
+        plt.xlabel("Activity Type")
+        plt.ylabel("Total Count")
+        plt.grid(axis="y", alpha=0.3)
+
+        self.add_caption(
+            "Interpretation: Most activity comes from slope runs. Cafe visits represent recovery behavior, while falls represent random risk events."
+        )
+
+        self.save_graph("03_activity_summary.png")
+
+    def plot_visitor_type_distribution(self):
+        labels = ["Skier", "Snowboarder"]
+        values = [
+            self.visitor_types["skier"],
+            self.visitor_types["snowboarder"]
+        ]
+
+        plt.figure(figsize=(8, 6))
+        bars = plt.bar(labels, values)
+
+        self.add_bar_labels(bars)
+
+        plt.title("Visitor Type Distribution", fontsize=16, fontweight="bold")
+        plt.xlabel("Visitor Type")
+        plt.ylabel("Number of Visitors")
+        plt.grid(axis="y", alpha=0.3)
+
+        self.add_caption(
+            "Interpretation: The simulation uses both skiers and snowboarders, allowing different strategy behavior between visitor types."
+        )
+
+        self.save_graph("04_visitor_type_distribution.png")
+
+    def plot_average_wait_times(self):
+        areas = ["Rental", "Lift", "Cafe"]
+        keys = ["rental", "lift", "cafe"]
+        averages = [self.average_wait(area) for area in keys]
+
+        plt.figure(figsize=(10, 6))
+        bars = plt.bar(areas, averages)
+
+        self.add_bar_labels(bars)
+
+        plt.title("Average Recorded Wait Time by Resort Area", fontsize=16, fontweight="bold")
+        plt.xlabel("Resort Area")
+        plt.ylabel("Average Recorded Wait Time")
+        plt.grid(axis="y", alpha=0.3)
+
+        self.add_caption(
+            "Note: Successful resource access is recorded as 0.0 seconds, so queue length is the stronger congestion metric in this version."
+        )
+
+        self.save_graph("05_average_wait_time_note.png")
 
     def plot_runs_vs_energy(self):
         if len(self.visitor_summaries) == 0:
@@ -257,30 +285,35 @@ class StatsManager:
                 snowboarder_runs.append(runs)
                 snowboarder_energy.append(energy_left)
 
-        plt.figure(figsize=(8, 5))
+        plt.figure(figsize=(10, 6))
 
         plt.scatter(
             skier_runs,
             skier_energy,
             label="Skier",
-            alpha=0.7
+            alpha=0.75,
+            s=70
         )
 
         plt.scatter(
             snowboarder_runs,
             snowboarder_energy,
             label="Snowboarder",
-            alpha=0.7
+            alpha=0.75,
+            s=70
         )
 
-        plt.title("Runs Completed vs Energy Left", fontsize=15, fontweight="bold")
+        plt.title("Runs Completed vs Energy Left", fontsize=16, fontweight="bold")
         plt.xlabel("Runs Completed")
         plt.ylabel("Energy Left")
         plt.legend()
         plt.grid(True, alpha=0.3)
-        plt.tight_layout()
-        plt.savefig("graphs/runs_vs_energy.png", dpi=300)
-        plt.close()
+
+        self.add_caption(
+            "Interpretation: Visitors with more runs usually finish with lower energy, showing the effect of repeated activity."
+        )
+
+        self.save_graph("06_runs_vs_energy.png")
 
     def plot_runs_vs_cafe_visits(self):
         if len(self.visitor_summaries) == 0:
@@ -304,27 +337,32 @@ class StatsManager:
                 snowboarder_runs.append(runs)
                 snowboarder_cafe.append(cafe_visits)
 
-        plt.figure(figsize=(8, 5))
+        plt.figure(figsize=(10, 6))
 
         plt.scatter(
             skier_runs,
             skier_cafe,
             label="Skier",
-            alpha=0.7
+            alpha=0.75,
+            s=70
         )
 
         plt.scatter(
             snowboarder_runs,
             snowboarder_cafe,
             label="Snowboarder",
-            alpha=0.7
+            alpha=0.75,
+            s=70
         )
 
-        plt.title("Runs Completed vs Cafe Visits", fontsize=15, fontweight="bold")
+        plt.title("Runs Completed vs Cafe Visits", fontsize=16, fontweight="bold")
         plt.xlabel("Runs Completed")
         plt.ylabel("Cafe Visits")
         plt.legend()
         plt.grid(True, alpha=0.3)
-        plt.tight_layout()
-        plt.savefig("graphs/runs_vs_cafe_visits.png", dpi=300)
-        plt.close()
+
+        self.add_caption(
+            "Interpretation: Cafe visits increase when visitors need recovery between repeated slope runs."
+        )
+
+        self.save_graph("07_runs_vs_cafe_visits.png")
