@@ -11,7 +11,7 @@ class ArrivingState(State):
     def handle(self, visitor):
         visitor.log("arrives at the resort.")
         visitor.log("moving to rental shop...")
-        time.sleep(random.uniform(0.3, 0.7))
+        time.sleep(random.uniform(0.1, 0.5))
         return RentingState()
 
 
