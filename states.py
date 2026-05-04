@@ -101,7 +101,7 @@ class ExitState(State):
 
         if visitor.resort is not None:
             visitor.resort.stats.update("visitor_summary", {
-                "runs": visitor.runs_completed,
+                "run": visitor.runs_completed,
                 "cafe_visits": visitor.cafe_visits,
                 "energy_left": visitor.energy,
                 "type": visitor.visitor_type
