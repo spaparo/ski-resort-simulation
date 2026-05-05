@@ -11,6 +11,8 @@ from config import (
     RENTAL_TIME_MAX,
     NUM_LIFTS,
     LIFT_CAPACITY,
+    LIFT_RIDE_TIME_MIN,
+    LIFT_RIDE_TIME_MAX,
     NUM_SLOPES,
     SLOPE_CAPACITY,
     SLOPE_TIME_MIN,
@@ -53,19 +55,19 @@ class RentalShop:
         # Critical region: equipment count, staff count, and rental queue are shared by all visitor threads.
         with self.lock:
             can_rent = (
-                self.staff_available > 0 and
-                (
-                    (visitor.visitor_type == "skier" and self.skis_available > 0) or
-                    (visitor.visitor_type == "snowboarder" and self.snowboards_available > 0)
+                self.staff_available > 0
+                and (
+                    (visitor.visitor_type == "skier" and self.skis_available > 0)
+                    or (visitor.visitor_type == "snowboarder" and self.snowboards_available > 0)
                 )
             )
 
             if not can_rent:
                 self._add_to_queue_if_needed(visitor)
                 queue_length = len(self.queue)
-                wait_time = round(queue_length * random.uniform(RENTAL_TIME_MIN, RENTAL_TIME_MAX), 2)
+                estimated_wait = round(queue_length * random.uniform(RENTAL_TIME_MIN, RENTAL_TIME_MAX), 2)
                 self.notify_observers("rental_queue", queue_length)
-                self.notify_observers("rental_wait", wait_time)
+                self.notify_observers("rental_wait", estimated_wait)
                 return False
 
             self.staff_available -= 1
@@ -127,15 +129,18 @@ class LiftStation:
             if self.current >= self.capacity:
                 self._add_to_queue_if_needed(visitor)
                 queue_length = len(self.queue)
-                wait_time = round(queue_length * random.uniform(0.5, 1.5), 2)
+                estimated_wait = round(queue_length * random.uniform(0.5, 1.5), 2)
                 self.notify_observers("lift_queue", queue_length)
-                self.notify_observers("lift_wait", wait_time)
+                self.notify_observers("lift_wait", estimated_wait)
                 return False
 
             self.current += 1
             self._remove_from_queue_if_present(visitor)
 
-        self.notify_observers("lift_wait", 0.0)
+        ride_time = random.uniform(LIFT_RIDE_TIME_MIN, LIFT_RIDE_TIME_MAX)
+        time.sleep(ride_time)
+
+        self.notify_observers("lift_wait", round(ride_time, 2))
         return True
 
     def leave_lift(self):
@@ -176,9 +181,9 @@ class Cafe:
             if self.current >= self.capacity or self.staff_available <= 0:
                 self._add_to_queue_if_needed(visitor)
                 queue_length = len(self.queue)
-                wait_time = round(queue_length * random.uniform(CAFE_TIME_MIN, CAFE_TIME_MAX), 2)
+                estimated_wait = round(queue_length * random.uniform(CAFE_TIME_MIN, CAFE_TIME_MAX), 2)
                 self.notify_observers("cafe_queue", queue_length)
-                self.notify_observers("cafe_wait", wait_time)
+                self.notify_observers("cafe_wait", estimated_wait)
                 return False
 
             self.current += 1
