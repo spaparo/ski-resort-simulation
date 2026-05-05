@@ -1,9 +1,11 @@
 import os
 import matplotlib.pyplot as plt
-
+import threading
 
 class StatsManager:
     def __init__(self):
+        self.lock = threading.Lock()
+
         self.wait_times = {
             "rental": [],
             "lift": [],
@@ -13,7 +15,8 @@ class StatsManager:
         self.queue_lengths = {
             "rental": [],
             "lift": [],
-            "cafe": []
+            "cafe": [],
+            "slope": []
         }
 
         self.total_runs = 0
@@ -28,38 +31,43 @@ class StatsManager:
         self.visitor_summaries = []
 
     def update(self, event_type, data=None):
-        if event_type == "rental_wait":
-            self.wait_times["rental"].append(data)
+        # Critical region: statistics are updated by multiple visitor threads
+        with self.lock:
+            if event_type == "rental_wait":
+                self.wait_times["rental"].append(data)
 
-        elif event_type == "lift_wait":
-            self.wait_times["lift"].append(data)
+            elif event_type == "lift_wait":
+                self.wait_times["lift"].append(data)
 
-        elif event_type == "cafe_wait":
-            self.wait_times["cafe"].append(data)
+            elif event_type == "cafe_wait":
+                self.wait_times["cafe"].append(data)
 
-        elif event_type == "rental_queue":
-            self.queue_lengths["rental"].append(data)
+            elif event_type == "rental_queue":
+                self.queue_lengths["rental"].append(data)
 
-        elif event_type == "lift_queue":
-            self.queue_lengths["lift"].append(data)
+            elif event_type == "lift_queue":
+                self.queue_lengths["lift"].append(data)
 
-        elif event_type == "cafe_queue":
-            self.queue_lengths["cafe"].append(data)
+            elif event_type == "cafe_queue":
+                self.queue_lengths["cafe"].append(data)
 
-        elif event_type == "run":
-            self.total_runs += 1
+            elif event_type == "run":
+                self.total_runs += 1
 
-        elif event_type == "cafe":
-            self.cafe_visits += 1
+            elif event_type == "slope_queue":
+                self.queue_lengths["slope"].append(data)
 
-        elif event_type == "fall":
-            self.falls += 1
+            elif event_type == "cafe":
+                self.cafe_visits += 1
 
-        elif event_type == "visitor_type":
-            self.record_visitor_type(data)
+            elif event_type == "fall":
+                self.falls += 1
 
-        elif event_type == "visitor_summary":
-            self.visitor_summaries.append(data)
+            elif event_type == "visitor_type":
+                self.record_visitor_type(data)
+
+            elif event_type == "visitor_summary":
+                self.visitor_summaries.append(data)
 
     def record_visitor_type(self, data):
         visitor_type = data
@@ -98,6 +106,7 @@ class StatsManager:
         print("Max rental queue:", self.max_queue("rental"))
         print("Max lift queue:", self.max_queue("lift"))
         print("Max cafe queue:", self.max_queue("cafe"))
+        print("Max slope queue:", self.max_queue("slope"))
 
         print("Total runs:", self.total_runs)
         print("Cafe visits:", self.cafe_visits)
@@ -114,6 +123,7 @@ class StatsManager:
         self.plot_average_wait_times()
         self.plot_runs_vs_energy()
         self.plot_runs_vs_cafe_visits()
+        self.plot_runs_by_visitor_type()
 
         print("\nGraphs saved in the 'graphs' folder.")
 
@@ -147,8 +157,8 @@ class StatsManager:
         plt.close()
 
     def plot_main_bottleneck(self):
-        areas = ["Rental", "Lift", "Cafe"]
-        keys = ["rental", "lift", "cafe"]
+        areas = ["Rental", "Lift", "Cafe", "Slope"]
+        keys = ["rental", "lift", "cafe", "slope"]
         max_queues = [self.max_queue(area) for area in keys]
 
         plt.figure(figsize=(10, 6))
@@ -162,13 +172,12 @@ class StatsManager:
         plt.grid(axis="y", alpha=0.3)
 
         self.add_caption(
-            "Interpretation: The lift queue is the largest bottleneck, meaning visitor demand exceeded lift capacity more than any other resort area."
+            "Interpretation: The resource with the highest maximum queue is the main bottleneck in this simulation run."
         )
-
         self.save_graph("01_main_bottleneck_queue.png")
 
     def plot_queue_trend(self):
-        areas = ["rental", "lift", "cafe"]
+        areas = ["rental", "lift", "cafe", "slope"]
 
         plt.figure(figsize=(11, 6))
 
@@ -366,3 +375,37 @@ class StatsManager:
         )
 
         self.save_graph("07_runs_vs_cafe_visits.png")
+
+    def plot_runs_by_visitor_type(self):
+        if len(self.visitor_summaries) == 0:
+            return
+
+        skier_runs = 0
+        snowboarder_runs = 0
+
+        for visitor in self.visitor_summaries:
+            visitor_type = visitor.get("type")
+            runs = visitor.get("runs", 0)
+
+            if visitor_type == "skier":
+                skier_runs += runs
+            elif visitor_type == "snowboarder":
+                snowboarder_runs += runs
+
+        labels = ["Skier", "Snowboarder"]
+        values = [skier_runs, snowboarder_runs]
+
+        plt.figure(figsize=(8, 6))
+        bars = plt.bar(labels, values)
+        self.add_bar_labels(bars)
+
+        plt.title("Slope Runs by Visitor Type", fontsize=16, fontweight="bold")
+        plt.xlabel("Visitor Type")
+        plt.ylabel("Total Runs")
+        plt.grid(axis="y", alpha=0.3)
+
+        self.add_caption(
+            "Interpretation: This compares total slope usage between skiers and snowboarders."
+        )
+
+        self.save_graph("08_runs_by_visitor_type.png")

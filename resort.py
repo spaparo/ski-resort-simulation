@@ -5,7 +5,13 @@ from observers import StatsManager
 from visitor import Visitor
 from resources import RentalShop, LiftStation, Cafe, Slope
 from database_manager import DatabaseManager
-from config import NUM_VISITORS, VISITOR_TYPES, NUM_SLOPES
+from config import (
+    NUM_VISITORS,
+    VISITOR_TYPES,
+    NUM_SLOPES,
+    ARRIVAL_INTERVAL_MIN,
+    ARRIVAL_INTERVAL_MAX
+)
 
 
 class Resort:
@@ -45,9 +51,7 @@ class Resort:
             )
 
             self.visitors.append(visitor)
-
             self.stats.update("visitor_type", visitor_type)
-
             self.database.save_visitor(visitor)
             self.database.log_event(visitor.visitor_id, "created", "resort", 0)
 
@@ -55,13 +59,15 @@ class Resort:
         service_times = {
             "rental": 1.5,
             "lift": 2.2,
-            "cafe": 1.8
+            "cafe": 1.8,
+            "slope": 2.0
         }
 
         congestion_multiplier = {
             "rental": 1.0,
             "lift": 1.3,
-            "cafe": 1.1
+            "cafe": 1.1,
+            "slope": 1.2
         }
 
         base_time = queue_length * service_times[area]
@@ -86,9 +92,8 @@ class Resort:
         for visitor in self.visitors:
             visitor.start()
 
-            # Small delay so visitors do not all enter at exactly the same time.
-            # This makes the queue and waiting time graphs more realistic.
-            time.sleep(random.uniform(0.01, 0.05))
+            # Stagger arrivals so visitors enter the resort gradually instead of all at once.
+            time.sleep(random.uniform(ARRIVAL_INTERVAL_MIN, ARRIVAL_INTERVAL_MAX))
 
     def join_threads(self):
         for visitor in self.visitors:
