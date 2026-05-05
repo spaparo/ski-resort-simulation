@@ -18,7 +18,12 @@ class ArrivingState(State):
 class RentingState(State):
     def handle(self, visitor):
         visitor.log("is getting equipment at the rental shop...")
-        visitor.resort.rental_shop.rent_equipment(visitor)
+        success = visitor.resort.rental_shop.rent_equipment(visitor)
+        visitor.has_equipment = True
+        if not success:
+            visitor.log("rental shop is busy, waiting in rental queue...")
+            time.sleep(0.5)
+            return RentingState()
         visitor.log("has collected gear. Moving to the lift...")
         return WaitingLiftState()
 
@@ -26,7 +31,12 @@ class RentingState(State):
 class WaitingLiftState(State):
     def handle(self, visitor):
         visitor.log("is waiting in the lift queue...")
-        visitor.resort.lift_station.use_lift(visitor)
+        success = visitor.resort.lift_station.use_lift(visitor)
+        if not success:
+            visitor.log("lift is full, waiting in lift queue...")
+            time.sleep(0.5)
+            return WaitingLiftState()
+
         visitor.log("got on the lift!")
         return RidingLiftState()
 
@@ -35,6 +45,7 @@ class RidingLiftState(State):
     def handle(self, visitor):
         visitor.log("is riding the lift up the mountain...")
         time.sleep(random.uniform(0.5, 1.0))
+        visitor.resort.lift_station.leave_lift()
         visitor.log("has reached the top!")
         return SlopeState()
 
@@ -71,7 +82,11 @@ class CafeState(State):
 
     def handle(self, visitor):
         visitor.log("is taking a break at the cafe...")
-        visitor.resort.cafe.visit(visitor)
+        success = visitor.resort.cafe.visit(visitor)
+        if not success:
+            visitor.log("cafe is full, waiting for a seat...")
+            time.sleep(0.5)
+            return CafeState()
 
         energy_before = visitor.energy
         visitor.energy = min(100, visitor.energy + self.ENERGY_RESTORE)
@@ -91,7 +106,10 @@ class CafeState(State):
 class ExitState(State):
     def handle(self, visitor):
         visitor.log("is returning equipment and leaving...")
+
         visitor.resort.rental_shop.return_equipment(visitor)
+        visitor.has_equipment = False
+
         visitor.log(
             f"--- SUMMARY --- "
             f"runs: {visitor.runs_completed} | "
@@ -101,11 +119,12 @@ class ExitState(State):
 
         if visitor.resort is not None:
             visitor.resort.stats.update("visitor_summary", {
-                "run": visitor.runs_completed,
+                "runs": visitor.runs_completed,
                 "cafe_visits": visitor.cafe_visits,
                 "energy_left": visitor.energy,
                 "type": visitor.visitor_type
             })
 
+            visitor.resort.database.update_visitor_summary(visitor)
         return None
 

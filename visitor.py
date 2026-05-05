@@ -1,5 +1,8 @@
 from threading import Thread
 import time
+
+from fontTools.misc import visitor
+
 from states import ArrivingState
 from strategies import SkierStrategy, SnowboarderStrategy
 
@@ -11,7 +14,8 @@ class Visitor(Thread):
         self.energy = 100
         self.runs_completed = 0
         self.cafe_visits = 0
-        self.current_state = None  # set later
+        self.current_state = None
+        self.has_equipment = False
 
         if visitor_type == "skier":
             self.strategy = SkierStrategy()
@@ -28,10 +32,17 @@ class Visitor(Thread):
 
     def run(self):
         self.log("thread started.")
-        while self.current_state is not None:
-            next_state = self.current_state.handle(self)
-            self.current_state = next_state
-        self.log("thread ended.")
+
+        try:
+            while self.current_state is not None:
+                next_state = self.current_state.handle(self)
+                self.current_state = next_state
+
+        except Exception as e:
+            self.log(f"error occurred: {e}")
+
+        finally:
+            self.log("thread ended.")
 
 if __name__ == "__main__":
 
