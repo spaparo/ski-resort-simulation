@@ -267,7 +267,7 @@ class StatsManager:
         plt.grid(axis="y", alpha=0.3)
 
         self.add_caption(
-            "Note: Successful resource access is recorded as 0.0 seconds, so queue length is the stronger congestion metric in this version."
+            "Interpretation: Wait time is measured from when a visitor first joins a queue until they successfully access the resource. Immediate access is recorded as 0.0 seconds."
         )
 
         self.save_graph("05_average_wait_time_note.png")
