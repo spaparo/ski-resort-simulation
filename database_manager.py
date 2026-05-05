@@ -36,7 +36,7 @@ class DatabaseManager:
     def save_visitor(self, visitor):
         with self.lock:
             self.cursor.execute("""
-                INSERT INTO visitors (id, type)
+                INSERT OR IGNORE INTO visitors (id, type)
                 VALUES (?, ?)
             """, (visitor.visitor_id, visitor.visitor_type))
             self.conn.commit()
