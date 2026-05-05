@@ -1,5 +1,5 @@
 import random
-
+from config import CAFE_VISIT_CHANCE
 
 class Handler:
     def __init__(self, next_handler=None):
@@ -65,7 +65,7 @@ class CafeHandler(Handler):
         self.db = db
 
     def handle(self, visitor):
-        if random.random() < 0.35:
+        if random.random() < CAFE_VISIT_CHANCE:
             success = self.cafe.visit(visitor)
             if success:
                 self.db.log_event(visitor.visitor_id, "cafe", "Cafe", 0)
