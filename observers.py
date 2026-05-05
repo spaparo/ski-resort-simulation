@@ -371,7 +371,7 @@ class StatsManager:
         plt.grid(True, alpha=0.3)
 
         self.add_caption(
-            "Interpretation: Cafe visits increase when visitors need recovery between repeated slope runs."
+            "Interpretation: Cafe visits vary by visitor type and recovery behavior, especially for visitors completing more repeated slope runs."
         )
 
         self.save_graph("07_runs_vs_cafe_visits.png")
