@@ -42,7 +42,7 @@ class Visitor(Thread):
             self.log(f"error occurred: {e}")
 
         finally:
-            self.log("thread ended.")
+            self.log("thread ended")
 
 if __name__ == "__main__":
 

@@ -16,7 +16,7 @@ class SkierStrategy:
 
 
 def choose_slope(self):
-    slopes = ["Blue Slope", "Red Slope", "Black Slope"]
+    slopes = ["Blue Slpe", "Red Slope", "Black Slope"]
     return random.choice(slopes)
 
 
