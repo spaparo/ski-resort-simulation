@@ -41,6 +41,10 @@ class Visitor(Thread):
         except Exception as e:
             self.log(f"error occurred: {e}")
 
+            if self.resort is not None and getattr(self, "has_equipment", False):
+                self.resort.rental_shop.return_equipment(self)
+                self.has_equipment = False
+
         finally:
             self.log("thread ended.")
 
