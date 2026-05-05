@@ -4,7 +4,7 @@
 # =========================
 
 # SIMULATION SIZE
-NUM_VISITORS = 80
+NUM_VISITORS = 20
 
 # VISITOR TYPES
 VISITOR_TYPES = ["skier", "snowboarder"]
