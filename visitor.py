@@ -16,6 +16,7 @@ class Visitor(Thread):
         self.cafe_visits = 0
         self.current_state = None
         self.has_equipment = False
+        self.target_runs = random.randint(MIN_RUNS_PER_VISITOR, MAX_RUNS_PER_VISITOR)
 
         if visitor_type == "skier":
             self.strategy = SkierStrategy()

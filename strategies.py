@@ -24,7 +24,7 @@ class SkierStrategy:
 
     def should_leave(self, visitor):
         too_tired = visitor.energy < self.ENERGY_THRESHOLD
-        enough_runs = visitor.runs_completed >= self.MAX_RUNS
+        enough_runs = visitor.runs_completed >= visitor.target_runs
         return too_tired or enough_runs
 
     def wants_cafe(self):
