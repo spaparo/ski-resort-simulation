@@ -100,7 +100,7 @@ class CafeState(State):
         visitor.log(f"energy: {energy_before}/100 -> {visitor.energy}/100")
 
         if visitor.strategy.should_leave(visitor):
-            visitor.log("still too tired. Heading home...")
+            visitor.log("still too tired. Heading home..")
             return ExitState()
 
         visitor.log("feeling better! Back to the lift...")
