@@ -28,13 +28,6 @@ class RentingState(State):
 
         visitor.has_equipment = True
 
-        visitor.resort.database.log_event(
-            visitor.visitor_id,
-            "rental",
-            "RentalShop",
-            0
-        )
-
         visitor.log("has collected gear. Moving to the lift...")
         return WaitingLiftState()
 
@@ -49,13 +42,6 @@ class WaitingLiftState(State):
             visitor.log("lift is full, waiting in lift queue...")
             time.sleep(0.5)
             return WaitingLiftState()
-
-        visitor.resort.database.log_event(
-            visitor.visitor_id,
-            "lift",
-            "LiftStation",
-            0
-        )
 
         visitor.log("got on the lift!")
         return RidingLiftState()
@@ -73,25 +59,26 @@ class RidingLiftState(State):
 class SlopeState(State):
     def handle(self, visitor):
         slope = visitor.strategy.choose_slope()
+        selected_slope = random.choice(visitor.resort.slopes)
         cost = visitor.strategy.energy_cost()
 
         visitor.log(f"starting run #{visitor.runs_completed + 1} on {slope}")
 
-        visitor.resort.slopes[0].go_down(visitor)
+        success, fell = selected_slope.go_down(visitor)
 
-        visitor.resort.database.log_event(
-            visitor.visitor_id,
-            "slope",
-            "Slope",
-            0
-        )
+        if not success:
+            visitor.log("slope is full, waiting for space...")
+            time.sleep(0.5)
+            return SlopeState()
 
         energy_before = visitor.energy
         visitor.energy = max(0, visitor.energy - cost)
         visitor.runs_completed += 1
 
         visitor.log(f"finished run #{visitor.runs_completed}")
-        visitor.log(f"energy used: {cost} — before: {energy_before}/100 — after: {visitor.energy}/100")
+        visitor.log(
+            f"energy used: {cost} — before: {energy_before}/100 — after: {visitor.energy}/100"
+        )
 
         if visitor.strategy.should_leave(visitor):
             visitor.log("is too tired or done enough runs. Leaving!")
@@ -117,13 +104,6 @@ class CafeState(State):
             visitor.log("cafe is full, waiting for a seat...")
             time.sleep(0.5)
             return CafeState()
-
-        visitor.resort.database.log_event(
-            visitor.visitor_id,
-            "cafe",
-            "Cafe",
-            0
-        )
 
         energy_before = visitor.energy
         visitor.energy = min(100, visitor.energy + self.ENERGY_RESTORE)

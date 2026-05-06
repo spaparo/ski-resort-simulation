@@ -6,7 +6,6 @@ from states import ArrivingState
 from strategies import SkierStrategy, SnowboarderStrategy
 from config import MIN_RUNS_PER_VISITOR, MAX_RUNS_PER_VISITOR
 
-from fontTools.misc import visitor
 
 
 class Visitor(Thread):
