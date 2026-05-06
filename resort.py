@@ -63,11 +63,18 @@ class Resort:
         for index, visitor in enumerate(self.visitors):
             visitor.start()
 
+            # Peak arrival period: visitors enter faster during the busy period.
             if PEAK_START_VISITOR <= index <= PEAK_END_VISITOR:
+                if index == PEAK_START_VISITOR:
+                    print("\n--- PEAK ARRIVAL PERIOD STARTED ---\n")
+
                 time.sleep(random.uniform(
                     PEAK_ARRIVAL_INTERVAL_MIN,
                     PEAK_ARRIVAL_INTERVAL_MAX
                 ))
+
+                if index == PEAK_END_VISITOR:
+                    print("\n--- PEAK ARRIVAL PERIOD ENDED ---\n")
             else:
                 time.sleep(random.uniform(
                     ARRIVAL_INTERVAL_MIN,
