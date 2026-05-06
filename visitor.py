@@ -1,10 +1,13 @@
 from threading import Thread
 import time
-
-from fontTools.misc import visitor
+import random
 
 from states import ArrivingState
 from strategies import SkierStrategy, SnowboarderStrategy
+from config import MIN_RUNS_PER_VISITOR, MAX_RUNS_PER_VISITOR
+
+from fontTools.misc import visitor
+
 
 class Visitor(Thread):
     def __init__(self, visitor_id, visitor_type, resort=None):
@@ -16,6 +19,7 @@ class Visitor(Thread):
         self.cafe_visits = 0
         self.current_state = None
         self.has_equipment = False
+        self.target_runs = random.randint(MIN_RUNS_PER_VISITOR, MAX_RUNS_PER_VISITOR)
 
         if visitor_type == "skier":
             self.strategy = SkierStrategy()
@@ -40,6 +44,10 @@ class Visitor(Thread):
 
         except Exception as e:
             self.log(f"error occurred: {e}")
+
+            if self.resort is not None and getattr(self, "has_equipment", False):
+                self.resort.rental_shop.return_equipment(self)
+                self.has_equipment = False
 
         finally:
             self.log("thread ended.")
