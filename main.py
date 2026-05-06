@@ -3,7 +3,7 @@ from resort import Resort
 
 
 def main():
-    random.seed(42)
+    random.seed(7)
 
     print("Starting Ski Resort Simulation...\n")
 
