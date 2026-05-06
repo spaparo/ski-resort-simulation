@@ -10,7 +10,11 @@ from config import (
     VISITOR_TYPES,
     NUM_SLOPES,
     ARRIVAL_INTERVAL_MIN,
-    ARRIVAL_INTERVAL_MAX
+    ARRIVAL_INTERVAL_MAX,
+    PEAK_START_VISITOR,
+    PEAK_END_VISITOR,
+    PEAK_ARRIVAL_INTERVAL_MIN,
+    PEAK_ARRIVAL_INTERVAL_MAX
 )
 
 
@@ -56,11 +60,19 @@ class Resort:
             self.database.log_event(visitor.visitor_id, "created", "resort", 0)
 
     def start_threads(self):
-        for visitor in self.visitors:
+        for index, visitor in enumerate(self.visitors):
             visitor.start()
 
-            # Stagger arrivals so visitors enter the resort gradually instead of all at once.
-            time.sleep(random.uniform(ARRIVAL_INTERVAL_MIN, ARRIVAL_INTERVAL_MAX))
+            if PEAK_START_VISITOR <= index <= PEAK_END_VISITOR:
+                time.sleep(random.uniform(
+                    PEAK_ARRIVAL_INTERVAL_MIN,
+                    PEAK_ARRIVAL_INTERVAL_MAX
+                ))
+            else:
+                time.sleep(random.uniform(
+                    ARRIVAL_INTERVAL_MIN,
+                    ARRIVAL_INTERVAL_MAX
+                ))
 
     def join_threads(self):
         for visitor in self.visitors:
