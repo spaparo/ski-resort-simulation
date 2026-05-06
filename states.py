@@ -28,6 +28,13 @@ class RentingState(State):
 
         visitor.has_equipment = True
 
+        visitor.resort.database.log_event(
+            visitor.visitor_id,
+            "rental",
+            "RentalShop",
+            0
+        )
+
         visitor.log("has collected gear. Moving to the lift...")
         return WaitingLiftState()
 
@@ -35,11 +42,20 @@ class RentingState(State):
 class WaitingLiftState(State):
     def handle(self, visitor):
         visitor.log("is waiting in the lift queue...")
+
         success = visitor.resort.lift_station.use_lift(visitor)
+
         if not success:
             visitor.log("lift is full, waiting in lift queue...")
             time.sleep(0.5)
             return WaitingLiftState()
+
+        visitor.resort.database.log_event(
+            visitor.visitor_id,
+            "lift",
+            "LiftStation",
+            0
+        )
 
         visitor.log("got on the lift!")
         return RidingLiftState()
@@ -60,7 +76,15 @@ class SlopeState(State):
         cost = visitor.strategy.energy_cost()
 
         visitor.log(f"starting run #{visitor.runs_completed + 1} on {slope}")
+
         visitor.resort.slopes[0].go_down(visitor)
+
+        visitor.resort.database.log_event(
+            visitor.visitor_id,
+            "slope",
+            "Slope",
+            0
+        )
 
         energy_before = visitor.energy
         visitor.energy = max(0, visitor.energy - cost)
@@ -86,11 +110,20 @@ class CafeState(State):
 
     def handle(self, visitor):
         visitor.log("is taking a break at the cafe...")
+
         success = visitor.resort.cafe.visit(visitor)
+
         if not success:
             visitor.log("cafe is full, waiting for a seat...")
             time.sleep(0.5)
             return CafeState()
+
+        visitor.resort.database.log_event(
+            visitor.visitor_id,
+            "cafe",
+            "Cafe",
+            0
+        )
 
         energy_before = visitor.energy
         visitor.energy = min(100, visitor.energy + self.ENERGY_RESTORE)
@@ -100,7 +133,7 @@ class CafeState(State):
         visitor.log(f"energy: {energy_before}/100 -> {visitor.energy}/100")
 
         if visitor.strategy.should_leave(visitor):
-            visitor.log("still too tired. Heading home..")
+            visitor.log("still too tired. Heading home...")
             return ExitState()
 
         visitor.log("feeling better! Back to the lift...")
@@ -129,6 +162,13 @@ class ExitState(State):
                 "type": visitor.visitor_type
             })
 
-            visitor.resort.database.update_visitor_summary(visitor)
-        return None
+            visitor.resort.database.log_event(
+                visitor.visitor_id,
+                "completed",
+                "resort",
+                0
+            )
 
+            visitor.resort.database.update_visitor_summary(visitor)
+
+        return None
