@@ -1,7 +1,6 @@
-# =========================
 # SKI RESORT SIMULATION CONFIG
 # Based on Val Thorens, France
-# =========================
+
 
 # SIMULATION SIZE
 NUM_VISITORS = 80
