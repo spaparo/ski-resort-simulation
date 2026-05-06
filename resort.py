@@ -61,25 +61,26 @@ class Resort:
 
     def start_threads(self):
         for index, visitor in enumerate(self.visitors):
+            visitor.is_peak_arrival = PEAK_START_VISITOR <= index <= PEAK_END_VISITOR
+
+            if index == PEAK_START_VISITOR:
+                print("\n--- MIDDAY PEAK ARRIVAL PERIOD STARTED ---\n")
+
             visitor.start()
 
-
-            if PEAK_START_VISITOR <= index <= PEAK_END_VISITOR:
-                if index == PEAK_START_VISITOR:
-                    print("\n--- MIDDAY PEAK ARRIVAL PERIOD STARTED ---\n")
-
+            if visitor.is_peak_arrival:
                 time.sleep(random.uniform(
                     PEAK_ARRIVAL_INTERVAL_MIN,
                     PEAK_ARRIVAL_INTERVAL_MAX
                 ))
-
-                if index == PEAK_END_VISITOR:
-                    print("\n--- MIDDAY PEAK ARRIVAL PERIOD ENDED ---\n")
             else:
                 time.sleep(random.uniform(
                     ARRIVAL_INTERVAL_MIN,
                     ARRIVAL_INTERVAL_MAX
                 ))
+
+            if index == PEAK_END_VISITOR:
+                print("\n--- MIDDAY PEAK ARRIVAL PERIOD ENDED ---\n")
 
     def join_threads(self):
         for visitor in self.visitors:
