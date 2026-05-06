@@ -20,7 +20,8 @@ class ArrivingState(State):
 class RentingState(State):
     def handle(self, visitor):
         visitor.log("is getting equipment at the rental shop...")
-        success = visitor.resort.rental_shop.rent_equipment(visitor)
+        success, wait_time = visitor.resort.rental_shop.rent_equipment(visitor)
+        visitor.resort.database.log_event(visitor.visitor_id, "rental", "RentalShop", wait_time)
         if not success:
             visitor.log("rental shop is busy, waiting in rental queue...")
             time.sleep(0.5)
@@ -33,7 +34,8 @@ class RentingState(State):
 class WaitingLiftState(State):
     def handle(self, visitor):
         visitor.log("is waiting in the lift queue...")
-        success = visitor.resort.lift_station.use_lift(visitor)
+        success, wait_time = visitor.resort.lift_station.use_lift(visitor)
+        visitor.resort.database.log_event(visitor.visitor_id, "lift", "LiftStation", wait_time)
         if not success:
             visitor.log("lift is full, waiting in lift queue...")
             time.sleep(0.5)
@@ -56,7 +58,12 @@ class SlopeState(State):
         slope = visitor.strategy.choose_slope()
         cost = visitor.strategy.energy_cost()
         visitor.log(f"starting run #{visitor.runs_completed + 1} on {slope}")
-        success, fell = visitor.resort.slopes[0].go_down(visitor)
+        success, fell, wait_time = visitor.resort.slopes[0].go_down(visitor)
+        visitor.resort.database.log_event(visitor.visitor_id, "slope", "Slope", wait_time)
+
+        if fell:
+            visitor.resort.database.log_event(visitor.visitor_id, "fall", "Slope", 0)
+
         if not success:
             visitor.log("slope is full, waiting before trying again...")
             time.sleep(0.5)
@@ -81,7 +88,9 @@ class CafeState(State):
 
     def handle(self, visitor):
         visitor.log("is taking a break at the cafe...")
-        success = visitor.resort.cafe.visit(visitor)
+        success, wait_time = visitor.resort.cafe.visit(visitor)
+        visitor.resort.database.log_event(visitor.visitor_id, "cafe", "Cafe", wait_time)
+
         if not success:
             visitor.log("cafe is full, waiting for a seat...")
             time.sleep(0.5)
@@ -101,6 +110,8 @@ class CafeState(State):
 class ExitState(State):
     def handle(self, visitor):
         visitor.log("is returning equipment and leaving...")
+        visitor.resort.database.log_event(visitor.visitor_id, "completed", "resort", 0)
+
         if visitor.has_equipment:
             visitor.resort.rental_shop.return_equipment(visitor)
             visitor.has_equipment = False
