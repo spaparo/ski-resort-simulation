@@ -292,7 +292,7 @@ class Cafe:
 
 class Slope:
    def __init__(self):
-       self.capacity = NUM_SLOPES * SLOPE_CAPACITY
+       self.capacity = SLOPE_CAPACITY
        self.current = 0
 
        self.queue = deque()
