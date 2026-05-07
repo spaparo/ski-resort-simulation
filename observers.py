@@ -236,17 +236,17 @@ class StatsManager:
         ]
 
         plt.figure(figsize=(8, 6))
-        bars = plt.bar(labels, values)
-
-        self.add_bar_labels(bars)
+        plt.pie(
+            values,
+            labels=labels,
+            autopct="%1.1f%%",
+            startangle=90
+        )
 
         plt.title("Visitor Type Distribution", fontsize=16, fontweight="bold")
-        plt.xlabel("Visitor Type")
-        plt.ylabel("Number of Visitors")
-        plt.grid(axis="y", alpha=0.3)
 
         self.add_caption(
-            "Interpretation: The simulation uses both skiers and snowboarders, allowing different strategy behavior between visitor types."
+            "Interpretation: This shows the share of skiers and snowboarders in the simulation, supporting different visitor behavior strategies."
         )
 
         self.save_graph("04_visitor_type_distribution.png")
@@ -396,16 +396,17 @@ class StatsManager:
         values = [skier_runs, snowboarder_runs]
 
         plt.figure(figsize=(8, 6))
-        bars = plt.bar(labels, values)
-        self.add_bar_labels(bars)
+        plt.pie(
+            values,
+            labels=labels,
+            autopct="%1.1f%%",
+            startangle=90
+        )
 
-        plt.title("Slope Runs by Visitor Type", fontsize=16, fontweight="bold")
-        plt.xlabel("Visitor Type")
-        plt.ylabel("Total Runs")
-        plt.grid(axis="y", alpha=0.3)
+        plt.title("Share of Slope Runs by Visitor Type", fontsize=16, fontweight="bold")
 
         self.add_caption(
-            "Interpretation: This compares total slope usage between skiers and snowboarders."
+            "Interpretation: This shows the share of total slope runs completed by skiers and snowboarders."
         )
 
         self.save_graph("08_runs_by_visitor_type.png")
