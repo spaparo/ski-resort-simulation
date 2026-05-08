@@ -1,9 +1,10 @@
 from resort import Resort
+from config import NUM_VISITORS
 
 
 def main():
     print("Starting Full Ski Resort Simulation...")
-    print("Visitors: 2500")
+    print(f"Visitors: {NUM_VISITORS}")
 
     resort = Resort()
     resort.start_simulation()
