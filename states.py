@@ -101,14 +101,16 @@ class SlopeState(State):
 
     def handle(self, visitor):
         if visitor.resort and getattr(visitor.resort, "is_closing", False):
-            visitor.log("resort is closing...leaving.")
+            visitor.log("resort is closing — skipping this run and leaving.")
             return ExitState()
 
+        # Choose slope
         if self.force_beginner:
             slope_name = "Green"
         else:
             slope_name = visitor.strategy.choose_slope(visitor)
 
+        # Find matching slope object
         selected_slope = None
         for s in visitor.resort.slopes:
             if getattr(s, "name", None) == slope_name:
@@ -118,10 +120,9 @@ class SlopeState(State):
             selected_slope = random.choice(visitor.resort.slopes)
             slope_name = getattr(selected_slope, "name", "Unknown")
 
-
+        # Check if slope is closed due to weather
         if not getattr(selected_slope, "is_open", True):
             visitor.log(f"{slope_name} is closed. Choosing a different slope...")
-
             open_slopes = [
                 s for s in visitor.resort.slopes
                 if getattr(s, "is_open", True)
@@ -136,18 +137,42 @@ class SlopeState(State):
         visitor.log(f"starting run #{visitor.runs_completed + 1} on {slope_name}")
 
         success, fell = selected_slope.go_down(visitor)
-        if not success:
-            visitor.log("could not use this slope, trying again...")
-            time.sleep(0.5)
-            return SlopeState(force_beginner=self.force_beginner)
 
         energy_before = visitor.energy
         visitor.energy = max(0, visitor.energy - cost)
         visitor.runs_completed += 1
         visitor.log(f"finished run #{visitor.runs_completed}")
         visitor.log(
-            f"energy used: {cost} — before: {energy_before}/100 — after: {visitor.energy}/100"
+            f"energy used: {cost:.1f} — before: {energy_before:.1f}/100 — after: {visitor.energy:.1f}/100"
         )
+
+        # Handle fall
+        if fell:
+            if visitor.injury_status == "serious":
+                visitor.log("had a SERIOUS fall and needs first aid!")
+                return FirstAidState()
+            else:
+                visitor.log("fell but recovered.")
+                visitor.injury_status = "minor"
+
+        # Decide next action
+        if visitor.strategy.should_leave(visitor):
+            visitor.log("is done for the day. Heading home!")
+            if visitor.strategy.wants_apres_ski(visitor):
+                visitor.log("stopping by après-ski first...")
+                return ApresSkiState()
+            return ExitState()
+
+        if visitor.strategy.wants_restaurant():
+            visitor.log("going to the restaurant for lunch...")
+            return RestaurantState()
+
+        if visitor.strategy.wants_cafe():
+            visitor.log("going to the café for a quick break...")
+            return CafeState()
+
+        visitor.log("heading back to the lift!")
+        return WaitingLiftState()
 
         def _is_serious_fall(visitor) -> bool:
             base = SERIOUS_FALL_CHANCE
