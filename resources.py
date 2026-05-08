@@ -214,17 +214,6 @@ class RentalShop:
 
         return True
 
-    def return_equipment(self, visitor):
-        with self.lock:
-            if visitor.visitor_type == "skier":
-                self.skis_available += 1
-            else:
-                self.snowboards_available += 1
-
-            self._remove_from_queue_if_present(visitor)
-            self.wait_start_times.pop(visitor.visitor_id, None)
-
-
 class LiftStation:
     def __init__(self):
         self.capacity = NUM_LIFTS * LIFT_CAPACITY
@@ -722,6 +711,9 @@ class InstructorPool:
         self.notify_observers("instructor_wait", wait_time)
         _log(visitor, "instructor_wait", "InstructorPool", wait_time)
         return True
+
+    def join_lesson(self, visitor):
+        return self.book(visitor)
 
     def _remove_from_queue_if_present(self, visitor):
         if visitor.visitor_id in self.queue_ids:
