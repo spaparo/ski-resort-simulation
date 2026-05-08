@@ -311,7 +311,7 @@ class StatsManager:
         self.plot_visitor_profiles()
         self.plot_slope_usage()
         self.plot_activity_breakdown()
-        self.plot_risk_by_weather()
+        self.plot_fall_outcome_breakdown()
 
         print("\nGraphs saved in the 'graphs' folder.")
 
@@ -552,62 +552,37 @@ class StatsManager:
 
         self.save_graph("05_activity_breakdown.png")
 
-    def plot_risk_by_weather(self):
-        weather_labels = ["sunny", "snowy", "windy", "foggy"]
+    def plot_fall_outcome_breakdown(self):
+        minor_falls = max(0, self.falls - self.serious_falls)
+        serious_falls = self.serious_falls
 
-        normal_falls = [
-            max(0, self.falls_by_weather[w] - self.serious_falls_by_weather[w])
-            for w in weather_labels
+        labels = [
+            "Minor Falls",
+            "Serious Falls Requiring First Aid"
         ]
 
-        serious_falls = [
-            self.serious_falls_by_weather[w]
-            for w in weather_labels
+        values = [
+            minor_falls,
+            serious_falls
         ]
 
-        first_aid = [
-            self.first_aid_by_weather[w]
-            for w in weather_labels
-        ]
+        plt.figure(figsize=(8, 8))
 
-        x_positions = list(range(len(weather_labels)))
+        if sum(values) == 0:
+            values = [1]
+            labels = ["No falls recorded"]
 
-        plt.figure(figsize=(10, 6))
-
-        plt.bar(
-            x_positions,
-            normal_falls,
-            label="Minor Falls"
+        plt.pie(
+            values,
+            labels=labels,
+            autopct="%1.1f%%",
+            startangle=90
         )
 
-        plt.bar(
-            x_positions,
-            serious_falls,
-            bottom=normal_falls,
-            label="Serious Falls"
-        )
-
-        combined_bottom = [
-            normal_falls[i] + serious_falls[i]
-            for i in range(len(weather_labels))
-        ]
-
-        plt.bar(
-            x_positions,
-            first_aid,
-            bottom=combined_bottom,
-            label="First Aid Visits"
-        )
-
-        plt.title("Falls and First-Aid Outcomes by Weather", fontsize=15)
-        plt.xlabel("Weather")
-        plt.ylabel("Number of Events")
-        plt.xticks(x_positions, [w.title() for w in weather_labels])
-        plt.legend()
-        plt.grid(axis="y", alpha=0.3)
+        plt.title("Fall and First-Aid Outcome Breakdown", fontsize=15)
 
         self.add_caption(
-            "Interpretation: This stacked chart connects weather conditions to risk. Foggy, snowy, or windy weather should place more pressure on first aid and slope safety."
+            "Interpretation: This chart separates minor falls from serious falls that required first-aid treatment in this simulation run."
         )
 
-        self.save_graph("06_risk_and_first_aid_by_weather.png")
+        self.save_graph("06_fall_outcome_breakdown.png")
