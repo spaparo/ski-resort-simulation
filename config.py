@@ -2,27 +2,25 @@
 # Based on Val Thorens, France
 
 # SIMULATION SIZE
-
 NUM_VISITORS = 2500
 
 
 # ARRIVAL PATTERN
-
 ARRIVAL_INTERVAL_MIN = 0.01
 ARRIVAL_INTERVAL_MAX = 0.04
 
 
 # RENTAL SHOP
-
 NUM_SKIS = 1300
 NUM_SNOWBOARDS = 1200
-RENTAL_STAFF = 45
+
+RENTAL_STAFF = 20
+
 RENTAL_TIME_MIN = 0.25
 RENTAL_TIME_MAX = 0.7
 
 
 # LIFT SYSTEM
-
 NUM_LIFTS = 12
 LIFT_CAPACITY = 12
 LIFT_RIDE_TIME_MIN = 0.25
@@ -30,7 +28,6 @@ LIFT_RIDE_TIME_MAX = 0.7
 
 
 # SLOPES
-
 SLOPE_CONFIGS = [
     {
         "name": "Green",
@@ -74,7 +71,7 @@ SLOPE_CONFIGS = [
     }
 ]
 
-# Keep old slope constants for compatibility with older code
+# Compatibility with older code
 NUM_SLOPES = len(SLOPE_CONFIGS)
 SLOPE_CAPACITY = 250
 SLOPE_TIME_MIN = 0.5
@@ -85,12 +82,10 @@ FALL_DELAY = 0.25
 
 
 # VISITOR TYPES
-
 VISITOR_TYPES = ["skier", "snowboarder"]
 
 
 # VISITOR BEHAVIOR
-
 MIN_RUNS_PER_VISITOR = 2
 MAX_RUNS_PER_VISITOR = 4
 
@@ -102,7 +97,6 @@ LEAVE_ENERGY_THRESHOLD = 35
 
 
 # AGE GROUPS
-
 AGE_GROUPS = ["child", "adult", "senior"]
 
 AGE_GROUP_PROBABILITIES = {
@@ -131,7 +125,6 @@ AGE_EFFECTS = {
 
 
 # SKILL LEVELS
-
 SKILL_LEVELS = ["beginner", "intermediate", "advanced"]
 
 SKILL_LEVEL_PROBABILITIES = {
@@ -157,12 +150,10 @@ SKILL_EFFECTS = {
 
 
 # EQUIPMENT
-
 OWN_EQUIPMENT_CHANCE = 0.35
 
 
 # WEATHER
-
 WEATHER_OPTIONS = ["sunny", "snowy", "windy", "foggy"]
 
 WEATHER_EFFECTS = {
@@ -178,27 +169,26 @@ WEATHER_EFFECTS = {
         "slope_multiplier": 1.2,
         "fall_multiplier": 1.3,
         "break_multiplier": 1.1,
-        "slope_closure_chance": 0.05
+        "slope_closure_chance": 0.03
     },
     "windy": {
         "lift_multiplier": 1.3,
         "slope_multiplier": 1.1,
         "fall_multiplier": 1.2,
         "break_multiplier": 1.05,
-        "slope_closure_chance": 0.08
+        "slope_closure_chance": 0.04
     },
     "foggy": {
         "lift_multiplier": 1.25,
         "slope_multiplier": 1.3,
         "fall_multiplier": 1.5,
         "break_multiplier": 1.2,
-        "slope_closure_chance": 0.10
+        "slope_closure_chance": 0.06
     }
 }
 
 
 # PEAK ARRIVAL PERIOD
-
 PEAK_START_VISITOR = 700
 PEAK_END_VISITOR = 1600
 
@@ -209,7 +199,6 @@ PEAK_SERVICE_SLOWDOWN_FACTOR = 1.08
 
 
 # DAY PHASES
-
 LUNCH_START_VISITOR = 900
 LUNCH_END_VISITOR = 1700
 
@@ -218,64 +207,56 @@ RESORT_CLOSE_VISITOR = 2500
 
 
 # CAFE / LODGE
-
-CAFE_SEATS = 320
-CAFE_STAFF = 35
+CAFE_SEATS = 80
+CAFE_STAFF = 12
 CAFE_VISIT_CHANCE = 0.24
 CAFE_TIME_MIN = 0.25
 CAFE_TIME_MAX = 0.6
 
 
 # RESTAURANT
-
-RESTAURANT_SEATS = 450
-RESTAURANT_STAFF = 45
+RESTAURANT_SEATS = 120
+RESTAURANT_STAFF = 15
 RESTAURANT_VISIT_CHANCE = 0.18
 RESTAURANT_TIME_MIN = 0.5
 RESTAURANT_TIME_MAX = 1.1
 
 
 # APRES-SKI
-
-APRES_SKI_CAPACITY = 600
+APRES_SKI_CAPACITY = 140
 APRES_SKI_VISIT_CHANCE = 0.15
 APRES_SKI_TIME_MIN = 0.35
 APRES_SKI_TIME_MAX = 0.8
 
 
 # SKI SCHOOL
-
-SKI_SCHOOL_CHANCE = 0.15
-CHILD_SKI_SCHOOL_CHANCE = 0.35
-NUM_INSTRUCTORS = 35
+SKI_SCHOOL_CHANCE = 0.20
+CHILD_SKI_SCHOOL_CHANCE = 0.45
+NUM_INSTRUCTORS = 8
 SKI_SCHOOL_GROUP_SIZE = 8
 
 
 # FIRST AID / PARAMEDICS
-
-PARAMEDICS = 12
-SERIOUS_FALL_CHANCE = 0.20
+PARAMEDICS = 4
+SERIOUS_FALL_CHANCE = 0.30
 FIRST_AID_TIME_MIN = 0.4
 FIRST_AID_TIME_MAX = 0.9
 EMERGENCY_PRIORITY_ENABLED = True
 
 
 # EQUIPMENT RETURN
-
-RETURN_STAFF = 35
+RETURN_STAFF = 12
 RETURN_TIME_MIN = 0.2
 RETURN_TIME_MAX = 0.5
 
 
 # STAFF FATIGUE / STAFF SHIFTS
-
 STAFF_FATIGUE_MULTIPLIER = 1.12
 LUNCH_SERVICE_SLOWDOWN_FACTOR = 1.15
 CLOSING_SERVICE_SLOWDOWN_FACTOR = 1.20
 
 
 # OUTPUTS TO TRACK
-
 TRACK_WAIT_TIMES = True
 TRACK_QUEUE_LENGTHS = True
 TRACK_SLOPE_RUNS = True
