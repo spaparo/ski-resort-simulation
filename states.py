@@ -7,10 +7,7 @@ class State:
         raise NotImplementedError
 
 
-# ---------------------------------------------------------------------------
-# ArrivingState
-# Visitors with own equipment skip the rental shop
-# ---------------------------------------------------------------------------
+
 class ArrivingState(State):
     def handle(self, visitor):
         visitor.log("arrives at the resort.")
@@ -28,9 +25,6 @@ class ArrivingState(State):
         return RentingState()
 
 
-# ---------------------------------------------------------------------------
-# RentingState
-# ---------------------------------------------------------------------------
 class RentingState(State):
     def handle(self, visitor):
         visitor.log("is getting equipment at the rental shop...")
@@ -51,10 +45,6 @@ class RentingState(State):
         return WaitingLiftState()
 
 
-# ---------------------------------------------------------------------------
-# SkiSchoolState  (NEW)
-# Visitor waits for an instructor, does a beginner lesson, then joins lift
-# ---------------------------------------------------------------------------
 class SkiSchoolState(State):
     def handle(self, visitor):
         visitor.log("is waiting for a ski school instructor...")
@@ -74,9 +64,6 @@ class SkiSchoolState(State):
         return SlopeState(force_beginner=True)
 
 
-# ---------------------------------------------------------------------------
-# WaitingLiftState
-# ---------------------------------------------------------------------------
 class WaitingLiftState(State):
     def handle(self, visitor):
         if visitor.resort and getattr(visitor.resort, "is_closing", False):
@@ -95,9 +82,6 @@ class WaitingLiftState(State):
         return RidingLiftState()
 
 
-# ---------------------------------------------------------------------------
-# RidingLiftState
-# ---------------------------------------------------------------------------
 class RidingLiftState(State):
     def handle(self, visitor):
         visitor.log("is riding the lift up the mountain...")
@@ -108,12 +92,6 @@ class RidingLiftState(State):
 
 
 
-
-# ---------------------------------------------------------------------------
-# SlopeState
-# Uses skill level + age + weather to pick slope
-# Serious falls go to FirstAidState
-# ---------------------------------------------------------------------------
 class SlopeState(State):
     def __init__(self, force_beginner=False):
         self.force_beginner = force_beginner
@@ -123,13 +101,11 @@ class SlopeState(State):
             visitor.log("resort is closing — skipping this run and leaving.")
             return ExitState()
 
-        # Choose slope
         if self.force_beginner:
             slope_name = "Green"
         else:
             slope_name = visitor.strategy.choose_slope(visitor)
 
-        # Find matching slope object
         selected_slope = None
         for s in visitor.resort.slopes:
             if getattr(s, "name", None) == slope_name:
@@ -139,7 +115,6 @@ class SlopeState(State):
             selected_slope = random.choice(visitor.resort.slopes)
             slope_name = getattr(selected_slope, "name", "Unknown")
 
-        # Check if slope is closed due to weather
         if not getattr(selected_slope, "is_open", True):
             visitor.log(f"{slope_name} is closed. Choosing a different slope...")
             open_slopes = [
@@ -165,7 +140,6 @@ class SlopeState(State):
             f"energy used: {cost:.1f} — before: {energy_before:.1f}/100 — after: {visitor.energy:.1f}/100"
         )
 
-        # Handle fall
         if fell:
             if visitor.injury_status == "serious":
                 visitor.log("had a SERIOUS fall and needs first aid!")
@@ -174,7 +148,6 @@ class SlopeState(State):
                 visitor.log("fell but recovered.")
                 visitor.injury_status = "minor"
 
-        # Decide next action
         if visitor.strategy.should_leave(visitor):
             visitor.log("is done for the day. Heading home!")
             if visitor.strategy.wants_apres_ski(visitor):
@@ -194,9 +167,6 @@ class SlopeState(State):
         return WaitingLiftState()
 
 
-# ---------------------------------------------------------------------------
-# CafeState
-# ---------------------------------------------------------------------------
 class CafeState(State):
     ENERGY_RESTORE = 25
 
@@ -222,9 +192,6 @@ class CafeState(State):
         return WaitingLiftState()
 
 
-# ---------------------------------------------------------------------------
-# RestaurantState  (NEW)
-# ---------------------------------------------------------------------------
 class RestaurantState(State):
     ENERGY_RESTORE = 40
 
@@ -258,9 +225,6 @@ class RestaurantState(State):
         return WaitingLiftState()
 
 
-# ---------------------------------------------------------------------------
-# ApresSkiState  (NEW)
-# ---------------------------------------------------------------------------
 class ApresSkiState(State):
     def handle(self, visitor):
         visitor.log("is enjoying après-ski!")
@@ -280,13 +244,9 @@ class ApresSkiState(State):
         return ExitState()
 
 
-# ---------------------------------------------------------------------------
-# FirstAidState  (NEW)
-# No queuing — visitor goes straight to first aid.
-# Serious injuries get priority over minor ones (handled inside FirstAidStation).
-# ---------------------------------------------------------------------------
+
 class FirstAidState(State):
-    ENERGY_RESTORE_SERIOUS = 10   # serious injuries need more rest, less energy back
+    ENERGY_RESTORE_SERIOUS = 10
     ENERGY_RESTORE_MINOR   = 20
 
     def handle(self, visitor):
@@ -304,8 +264,7 @@ class FirstAidState(State):
             visitor.injury_status = "treated"
             return ExitState()
 
-        # Serious injuries go to priority queue, minor ones to normal queue
-        # Both are handled inside FirstAidStation.treat()
+
         success = first_aid.treat(visitor)
         if not success:
             visitor.log("first aid is busy, waiting...")
@@ -323,14 +282,11 @@ class FirstAidState(State):
         return ExitState()
 
 
-# ---------------------------------------------------------------------------
-# ExitState
-# ---------------------------------------------------------------------------
 class ExitState(State):
     def handle(self, visitor):
         visitor.log("is returning equipment and leaving...")
 
-        # Only return equipment if it was rented (not own equipment visitors)
+
         if visitor.has_equipment and not visitor.has_own_equipment:
             success = visitor.resort.return_desk.return_equipment(visitor)
             if not success:
