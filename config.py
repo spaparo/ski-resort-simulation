@@ -66,14 +66,15 @@ SLOPE_CONFIGS = [
     },
     {
         "name": "Orange",
-        "difficulty": "snow_park",
-        "capacity": 260,
-        "time_min": 0.6,
-        "time_max": 1.3,
-        "fall_modifier": 1.5
+        "difficulty": "extreme_ungroomed",
+        "capacity": 180,
+        "time_min": 0.8,
+        "time_max": 1.6,
+        "fall_modifier": 2.0
     }
 ]
 
+# Keep old slope constants for compatibility with older code
 NUM_SLOPES = len(SLOPE_CONFIGS)
 SLOPE_CAPACITY = 250
 SLOPE_TIME_MIN = 0.5
@@ -110,6 +111,24 @@ AGE_GROUP_PROBABILITIES = {
     "senior": 0.15
 }
 
+AGE_EFFECTS = {
+    "child": {
+        "energy_multiplier": 0.9,
+        "fall_multiplier": 1.15,
+        "break_multiplier": 1.15
+    },
+    "adult": {
+        "energy_multiplier": 1.0,
+        "fall_multiplier": 1.0,
+        "break_multiplier": 1.0
+    },
+    "senior": {
+        "energy_multiplier": 1.15,
+        "fall_multiplier": 1.25,
+        "break_multiplier": 1.2
+    }
+}
+
 
 # SKILL LEVELS
 
@@ -121,6 +140,21 @@ SKILL_LEVEL_PROBABILITIES = {
     "advanced": 0.20
 }
 
+SKILL_EFFECTS = {
+    "beginner": {
+        "fall_multiplier": 1.3,
+        "preferred_slopes": ["Green", "Blue"]
+    },
+    "intermediate": {
+        "fall_multiplier": 1.0,
+        "preferred_slopes": ["Blue", "Red"]
+    },
+    "advanced": {
+        "fall_multiplier": 0.8,
+        "preferred_slopes": ["Red", "Black", "Orange"]
+    }
+}
+
 
 # EQUIPMENT
 
@@ -129,32 +163,36 @@ OWN_EQUIPMENT_CHANCE = 0.35
 
 # WEATHER
 
-WEATHER_OPTIONS = ["sunny", "snowy", "windy", "stormy"]
+WEATHER_OPTIONS = ["sunny", "snowy", "windy", "foggy"]
 
 WEATHER_EFFECTS = {
     "sunny": {
         "lift_multiplier": 1.0,
         "slope_multiplier": 1.0,
         "fall_multiplier": 1.0,
-        "break_multiplier": 1.0
+        "break_multiplier": 1.0,
+        "slope_closure_chance": 0.0
     },
     "snowy": {
         "lift_multiplier": 1.15,
         "slope_multiplier": 1.2,
         "fall_multiplier": 1.3,
-        "break_multiplier": 1.1
+        "break_multiplier": 1.1,
+        "slope_closure_chance": 0.05
     },
     "windy": {
         "lift_multiplier": 1.3,
         "slope_multiplier": 1.1,
         "fall_multiplier": 1.2,
-        "break_multiplier": 1.05
+        "break_multiplier": 1.05,
+        "slope_closure_chance": 0.08
     },
-    "stormy": {
-        "lift_multiplier": 1.6,
-        "slope_multiplier": 1.4,
-        "fall_multiplier": 1.8,
-        "break_multiplier": 1.3
+    "foggy": {
+        "lift_multiplier": 1.25,
+        "slope_multiplier": 1.3,
+        "fall_multiplier": 1.5,
+        "break_multiplier": 1.2,
+        "slope_closure_chance": 0.10
     }
 }
 
@@ -213,12 +251,13 @@ NUM_INSTRUCTORS = 35
 SKI_SCHOOL_GROUP_SIZE = 8
 
 
-# FIRST AID
+# FIRST AID / PARAMEDICS
 
 PARAMEDICS = 12
 SERIOUS_FALL_CHANCE = 0.20
 FIRST_AID_TIME_MIN = 0.4
 FIRST_AID_TIME_MAX = 0.9
+EMERGENCY_PRIORITY_ENABLED = True
 
 
 # EQUIPMENT RETURN
@@ -249,3 +288,5 @@ TRACK_WEATHER = True
 TRACK_AGE_GROUPS = True
 TRACK_SKILL_LEVELS = True
 TRACK_EQUIPMENT_STATUS = True
+TRACK_EQUIPMENT_RETURN = True
+TRACK_STAFF_FATIGUE = True
