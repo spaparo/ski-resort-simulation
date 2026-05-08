@@ -459,6 +459,7 @@ class Slope:
             self.wait_start_times.pop(visitor.visitor_id, None)
 
         self.notify_observers("run", 1)
+        self.notify_observers("slope_used", self.name)
         _log(visitor, "slope_run", self.name, 0)
 
         run_time = random.uniform(self.run_time_min, self.run_time_max) * _slope_multiplier(visitor)
