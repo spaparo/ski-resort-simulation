@@ -39,7 +39,11 @@ from config import (
     LUNCH_START_VISITOR,
     LUNCH_END_VISITOR,
     LAST_LIFT_VISITOR,
-    RESORT_CLOSE_VISITOR
+    RESORT_CLOSE_VISITOR,
+    STARTING_ENERGY,
+    MIN_RUNS_PER_VISITOR,
+    MAX_RUNS_PER_VISITOR,
+    AGE_EFFECTS
 )
 
 
@@ -124,8 +128,16 @@ class Resort:
     def create_visitors(self):
         for i in range(NUM_VISITORS):
             visitor_type = random.choice(VISITOR_TYPES)
-            age_group = self.weighted_choice(AGE_GROUPS, AGE_GROUP_PROBABILITIES)
-            skill_level = self.weighted_choice(SKILL_LEVELS, SKILL_LEVEL_PROBABILITIES)
+
+            age_group = self.weighted_choice(
+                AGE_GROUPS,
+                AGE_GROUP_PROBABILITIES
+            )
+
+            skill_level = self.weighted_choice(
+                SKILL_LEVELS,
+                SKILL_LEVEL_PROBABILITIES
+            )
 
             has_own_equipment = random.random() < OWN_EQUIPMENT_CHANCE
 
@@ -140,6 +152,7 @@ class Resort:
                 resort=self
             )
 
+            # Visitor profile is assigned here only.
             visitor.age_group = age_group
             visitor.skill_level = skill_level
             visitor.has_own_equipment = has_own_equipment
@@ -147,7 +160,31 @@ class Resort:
             visitor.group_id = i // 8 if is_ski_school else None
             visitor.injury_status = "none"
             visitor.staff_fatigue_active = False
+            visitor.is_peak_arrival = False
+            visitor.day_phase = "morning"
 
+            # Energy depends on age group.
+            energy_multiplier = AGE_EFFECTS[age_group]["energy_multiplier"]
+            visitor.energy = STARTING_ENERGY / energy_multiplier
+
+            # Target runs also depends on age group.
+            visitor.target_runs = random.randint(
+                MIN_RUNS_PER_VISITOR,
+                MAX_RUNS_PER_VISITOR
+            )
+
+            if age_group == "child":
+                visitor.target_runs = max(
+                    MIN_RUNS_PER_VISITOR,
+                    visitor.target_runs - 1
+                )
+            elif age_group == "senior":
+                visitor.target_runs = max(
+                    MIN_RUNS_PER_VISITOR,
+                    visitor.target_runs - 2
+                )
+
+            # Strategy depends on visitor type, age group, and skill level.
             if visitor_type == "skier":
                 visitor.strategy = SkierStrategy(age_group, skill_level)
             else:
@@ -155,6 +192,7 @@ class Resort:
 
             self.visitors.append(visitor)
 
+            # Stats tracking
             self.stats.update("visitor_type", visitor_type)
             self.stats.update("age_group", age_group)
             self.stats.update("skill_level", skill_level)
@@ -167,6 +205,7 @@ class Resort:
             if is_ski_school:
                 self.stats.update("ski_school")
 
+            # Database logging
             self.database.save_visitor(visitor)
 
             self.database.log_event(
@@ -185,8 +224,8 @@ class Resort:
         for index, visitor in enumerate(self.visitors):
             self.phase = self.get_phase(index)
             self.is_closing = self.phase in ["closing", "closed"]
-            visitor.day_phase = self.phase
 
+            visitor.day_phase = self.phase
             visitor.is_peak_arrival = PEAK_START_VISITOR <= index <= PEAK_END_VISITOR
 
             if index == PEAK_START_VISITOR:
