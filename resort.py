@@ -4,6 +4,7 @@ import time
 from observers import StatsManager
 from visitor import Visitor
 from database_manager import DatabaseManager
+from strategies import SkierStrategy, SnowboarderStrategy
 
 from resources import (
     RentalShop,
@@ -49,6 +50,7 @@ class Resort:
         self.visitors = []
 
         self.is_open = False
+        self.is_closing = False
         self.weather = random.choice(WEATHER_OPTIONS)
         self.phase = "morning"
 
@@ -59,6 +61,7 @@ class Resort:
         self.apres_ski = None
         self.first_aid = None
         self.instructor_pool = None
+        self.ski_school = None
         self.return_desk = None
         self.equipment_return = None
         self.slopes = []
@@ -90,6 +93,7 @@ class Resort:
         self.apres_ski = ApresSki()
         self.first_aid = FirstAidStation()
         self.instructor_pool = InstructorPool()
+        self.ski_school = self.instructor_pool
         self.return_desk = EquipmentReturnDesk()
         self.equipment_return = self.return_desk
 
@@ -136,15 +140,18 @@ class Resort:
                 resort=self
             )
 
-            # Extra upgraded visitor attributes.
-            # These are set here so Sofia's visitor/states/strategies files can use them.
             visitor.age_group = age_group
             visitor.skill_level = skill_level
             visitor.has_own_equipment = has_own_equipment
             visitor.is_ski_school = is_ski_school
             visitor.group_id = i // 8 if is_ski_school else None
-            visitor.injury_status = None
+            visitor.injury_status = "none"
             visitor.staff_fatigue_active = False
+
+            if visitor_type == "skier":
+                visitor.strategy = SkierStrategy(age_group, skill_level)
+            else:
+                visitor.strategy = SnowboarderStrategy(age_group, skill_level)
 
             self.visitors.append(visitor)
 
@@ -161,11 +168,23 @@ class Resort:
                 self.stats.update("ski_school")
 
             self.database.save_visitor(visitor)
-            self.database.log_event(visitor.visitor_id, "created", "resort", 0)
+
+            self.database.log_event(
+                visitor.visitor_id,
+                "created",
+                "resort",
+                0,
+                weather=self.weather,
+                age_group=age_group,
+                skill_level=skill_level,
+                own_equipment=has_own_equipment,
+                ski_school=is_ski_school
+            )
 
     def start_threads(self):
         for index, visitor in enumerate(self.visitors):
             self.phase = self.get_phase(index)
+            self.is_closing = self.phase in ["closing", "closed"]
             visitor.day_phase = self.phase
 
             visitor.is_peak_arrival = PEAK_START_VISITOR <= index <= PEAK_END_VISITOR
@@ -204,6 +223,7 @@ class Resort:
 
     def start_simulation(self):
         self.is_open = True
+        self.is_closing = False
 
         print("Opening full ski resort simulation...")
         print(f"Visitors: {NUM_VISITORS}")
@@ -216,6 +236,7 @@ class Resort:
         self.join_threads()
 
         self.phase = "closed"
+        self.is_closing = True
         self.is_open = False
 
         print("Closing ski resort simulation...")
