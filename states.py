@@ -74,6 +74,7 @@ class WaitingLiftState(State):
     def handle(self, visitor):
         if visitor.resort and getattr(visitor.resort, "is_closing", False):
             visitor.log("resort is closing — heading home without another run.")
+            visitor.resort.stats.update("closing_affected")
             return ExitState()
 
         visitor.log("is waiting in the lift queue...")
@@ -107,6 +108,7 @@ class SlopeState(State):
     def handle(self, visitor):
         if visitor.resort and getattr(visitor.resort, "is_closing", False):
             visitor.log("resort is closing — skipping this run and leaving.")
+            visitor.resort.stats.update("closing_affected")
             return ExitState()
 
         if self.force_beginner:
