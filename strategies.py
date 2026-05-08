@@ -14,11 +14,17 @@ from config import (
 
 def _pick_slope_for(visitor_type, age_group, skill_level, is_ski_school, weather):
     """
+    Return a slope name string based on visitor profile and weather.
+
+    Slope names from config: Green, Blue, Red, Black, Orange
+    Skill levels drive preferred_slopes from SKILL_EFFECTS in config.
+
     Rules:
     - Ski-school visitors        -> always Green
     - Children                   -> Green or Blue only
     - Seniors                    -> Green or Blue only
     - Everyone else              -> preferred slopes from their skill level
+    - Weather closure chance     -> handled by resort, not here
     - Foggy / snowy weather      -> drop one level safer for all
     """
     if is_ski_school:
@@ -29,15 +35,16 @@ def _pick_slope_for(visitor_type, age_group, skill_level, is_ski_school, weather
     elif age_group == "senior":
         pool = ["Green", "Blue"]
     else:
+        # Use skill level preferred slopes from config
         pool = list(SKILL_EFFECTS[skill_level]["preferred_slopes"])
 
+    # Weather makes everyone pick safer slopes
     weather_effect = WEATHER_EFFECTS.get(weather, WEATHER_EFFECTS["sunny"])
     fall_mult = weather_effect["fall_multiplier"]
-    if fall_mult >= 1.5:
+    if weather == "foggy":
         pool = [pool[0]]
-    elif fall_mult >= 1.2:
-        if len(pool) > 1:
-            pool = pool[:-1]
+    elif weather == "snowy" and len(pool) > 1:
+        pool = pool[:-1]
 
     return random.choice(pool)
 
@@ -72,6 +79,7 @@ class BaseStrategy:
         return too_tired or enough_runs
 
     def _energy_threshold(self):
+        # Seniors and children give up a bit earlier
         if self.age_group == "senior":
             return self.ENERGY_THRESHOLD + 10
         if self.age_group == "child":
@@ -87,6 +95,7 @@ class BaseStrategy:
         return random.random() < base
 
     def wants_apres_ski(self, visitor):
+        # Children and ski-school visitors skip apres-ski
         if self.age_group == "child":
             return False
         if visitor.is_ski_school:
