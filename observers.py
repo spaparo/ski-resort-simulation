@@ -28,6 +28,40 @@ class StatsManager:
             "snowboarder": 0
         }
 
+        self.weather_counts = {
+            "sunny": 0,
+            "snowy": 0,
+            "windy": 0,
+            "stormy": 0
+        }
+
+        self.age_groups = {
+            "child": 0,
+            "adult": 0,
+            "senior": 0
+        }
+
+        self.skill_levels = {
+            "beginner": 0,
+            "intermediate": 0,
+            "advanced": 0
+        }
+
+        self.equipment_status = {
+            "own_equipment": 0,
+            "rental_equipment": 0
+        }
+
+        self.slope_usage = {}
+
+        self.restaurant_visits = 0
+        self.apres_ski_visits = 0
+        self.ski_school_visitors = 0
+        self.first_aid_visits = 0
+        self.serious_falls = 0
+        self.closing_affected_visitors = 0
+        self.equipment_return_queues = []
+
         self.visitor_summaries = []
 
     def update(self, event_type, data=None):
@@ -68,6 +102,50 @@ class StatsManager:
 
             elif event_type == "visitor_summary":
                 self.visitor_summaries.append(data)
+
+            elif event_type == "weather":
+                if data in self.weather_counts:
+                    self.weather_counts[data] += 1
+
+            elif event_type == "age_group":
+                if data in self.age_groups:
+                    self.age_groups[data] += 1
+
+            elif event_type == "skill_level":
+                if data in self.skill_levels:
+                    self.skill_levels[data] += 1
+
+            elif event_type == "own_equipment":
+                self.equipment_status["own_equipment"] += 1
+
+            elif event_type == "rental_equipment":
+                self.equipment_status["rental_equipment"] += 1
+
+            elif event_type == "slope_used":
+                if data not in self.slope_usage:
+                    self.slope_usage[data] = 0
+                self.slope_usage[data] += 1
+
+            elif event_type == "restaurant":
+                self.restaurant_visits += 1
+
+            elif event_type == "apres_ski":
+                self.apres_ski_visits += 1
+
+            elif event_type == "ski_school":
+                self.ski_school_visitors += 1
+
+            elif event_type == "first_aid":
+                self.first_aid_visits += 1
+
+            elif event_type == "serious_fall":
+                self.serious_falls += 1
+
+            elif event_type == "closing_affected":
+                self.closing_affected_visitors += 1
+
+            elif event_type == "equipment_return_queue":
+                self.equipment_return_queues.append(data)
 
     def record_visitor_type(self, data):
         visitor_type = data
@@ -112,6 +190,18 @@ class StatsManager:
         print("Cafe visits:", self.cafe_visits)
         print("Falls:", self.falls)
         print("Visitor types:", self.visitor_types)
+
+        print("Weather:", self.weather_counts)
+        print("Age groups:", self.age_groups)
+        print("Skill levels:", self.skill_levels)
+        print("Equipment status:", self.equipment_status)
+        print("Slope usage:", self.slope_usage)
+        print("Restaurant visits:", self.restaurant_visits)
+        print("Après-ski visits:", self.apres_ski_visits)
+        print("Ski school visitors:", self.ski_school_visitors)
+        print("First-aid visits:", self.first_aid_visits)
+        print("Serious falls:", self.serious_falls)
+        print("Visitors affected by closing:", self.closing_affected_visitors)
 
     def show_graphs(self):
         os.makedirs("graphs", exist_ok=True)
