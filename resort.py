@@ -223,8 +223,6 @@ class Resort:
     def start_threads(self):
         for index, visitor in enumerate(self.visitors):
             self.phase = self.get_phase(index)
-            self.is_closing = self.phase in ["closing", "closed"]
-
             visitor.day_phase = self.phase
             visitor.is_peak_arrival = PEAK_START_VISITOR <= index <= PEAK_END_VISITOR
 
