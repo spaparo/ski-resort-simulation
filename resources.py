@@ -528,7 +528,7 @@ class Restaurant:
             wait_time = self._get_wait_time(visitor)
             self._remove_from_queue_if_present(visitor)
 
-        service_time = random.uniform(RESTAURANT_TIME_MIN, RESTAURANT_TIME_MAX) * _service_multiplier(visitor) * _indoor_demand_multiplier(visitor)
+        service_time = random.uniform(RESTAURANT_TIME_MIN, RESTAURANT_TIME_MAX) * _service_multiplier(visitor) * _indoor_weather_multiplier(visitor)
         time.sleep(service_time)
 
         with self.lock:
