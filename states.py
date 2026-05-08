@@ -119,12 +119,12 @@ class SlopeState(State):
             slope_name = getattr(selected_slope, "name", "Unknown")
 
 
-        if getattr(selected_slope, "is_closed", False):
+        if not getattr(selected_slope, "is_open", True):
             visitor.log(f"{slope_name} is closed. Choosing a different slope...")
 
             open_slopes = [
                 s for s in visitor.resort.slopes
-                if not getattr(s, "is_closed", False)
+                if getattr(s, "is_open", True)
             ]
             if not open_slopes:
                 visitor.log("all slopes are closed! Heading to the café...")
@@ -136,7 +136,10 @@ class SlopeState(State):
         visitor.log(f"starting run #{visitor.runs_completed + 1} on {slope_name}")
 
         success, fell = selected_slope.go_down(visitor)
-
+        if not success:
+            visitor.log("could not use this slope, trying again...")
+            time.sleep(0.5)
+            return SlopeState(force_beginner=self.force_beginner)
 
         energy_before = visitor.energy
         visitor.energy = max(0, visitor.energy - cost)
@@ -284,8 +287,11 @@ class FirstAidState(State):
             visitor.injury_status = "treated"
             return ExitState()
 
-
-        first_aid.treat(visitor)
+        success = first_aid.treat(visitor)
+        if not success:
+            visitor.log("first aid is busy, waiting...")
+            time.sleep(0.5)
+            return FirstAidState()
 
         energy_restore = self.ENERGY_RESTORE_SERIOUS \
             if is_serious \
@@ -303,8 +309,13 @@ class ExitState(State):
     def handle(self, visitor):
         visitor.log("is returning equipment and leaving...")
 
-        visitor.resort.return_desk.return_equipment(visitor)
-        visitor.has_equipment = False
+        if visitor.has_equipment and not visitor.has_own_equipment:
+            success = visitor.resort.return_desk.return_equipment(visitor)
+            if not success:
+                visitor.log("equipment return is busy, waiting...")
+                time.sleep(0.5)
+                return ExitState()
+            visitor.has_equipment = False
 
         visitor.log(
             f"--- SUMMARY --- "
