@@ -303,7 +303,7 @@ class ExitState(State):
     def handle(self, visitor):
         visitor.log("is returning equipment and leaving...")
 
-        visitor.resort.rental_shop.return_equipment(visitor)
+        visitor.resort.return_desk.return_equipment(visitor)
         visitor.has_equipment = False
 
         visitor.log(
