@@ -1,76 +1,191 @@
 # Ski Resort Simulation
 
-This project simulates a busy ski resort using Python threads. The goal is to model how skiers and snowboarders move through shared resort resources and identify where congestion happens when many visitors are active at the same time.
+This project is a Python-based simulation of a busy ski resort. It models how skiers and snowboarders move through different resort areas while competing for shared resources such as rentals, lifts, slopes, cafe spaces, restaurant service, and après-ski areas.
+
+The main goal of the project is to analyze visitor flow, congestion, waiting times, and bottlenecks when many visitors are active at the same time.
 
 ## Project Overview
 
-The simulation represents one busy ski day with 250 visitors. Each visitor acts as an independent thread and moves through the resort flow:
+The simulation represents a busy ski resort day where visitors enter the resort, move through different areas, repeat activities, lose and recover energy, and eventually leave.
 
-Arrive → Rent → Lift → Slope → Cafe / Repeat → Exit
+Each visitor is implemented as an independent thread. This allows many visitors to act at the same time, making the simulation closer to a real resort environment where people do not move one by one.
 
-Visitors can repeat slope runs, lose energy, recover at the cafe, and experience random falls. A midday peak arrival period is also included to create more realistic congestion.
+The general visitor flow is:
+
+**Arrive → Rent Equipment → Use Lift → Ski/Snowboard on Slope → Visit Cafe / Restaurant / Après-Ski → Repeat or Exit**
+
+Visitors can repeat slope runs, return to the lift multiple times, recover energy in rest areas, and experience random events such as falls.
 
 ## Main Features
 
-- 250 visitor threads
-- Skiers and snowboarders
-- Rental shop, lift station, slope, and cafe resources
-- Queues and limited capacity for shared resources
-- Locks to protect shared data and prevent race conditions
-- Midday peak arrival period
-- Energy loss after slope runs
-- Cafe recovery
+- Visitor simulation using Python threads
+- Skiers and snowboarders with different behavior
+- Rental shop resource
+- Lift station resource
+- Slope resource
+- Cafe resource
+- Restaurant and après-ski areas
+- Queues for limited-capacity resources
+- Shared resource management
+- Locks to prevent race conditions
+- Visitor energy system
+- Repeated slope runs
 - Random fall events
+- Midday peak arrival period
+- Event tracking through StatsManager
 - SQLite event logging
-- StatsManager for tracking results
+- Final statistics summary
 - Graph generation using matplotlib
 
 ## Operating Systems Concepts
 
-The main Operating Systems concepts used in this project are:
+This project applies several Operating Systems concepts.
 
-- **Threads:** each visitor is an independent thread.
-- **Shared resources:** visitors compete for rental equipment, lift capacity, cafe space, and slope access.
-- **Critical regions:** queues, capacity counts, database writes, and statistics updates must be protected.
-- **Locks:** locks control access to shared data and prevent race conditions.
+### Threads
+
+Each visitor runs as an independent thread. This means multiple visitors can move through the simulation at the same time instead of waiting for one visitor to finish before the next one starts.
+
+### Shared Resources
+
+Many visitors compete for the same limited resort resources. These include:
+
+- Rental equipment and staff
+- Lift capacity
+- Slope capacity
+- Cafe capacity
+- Restaurant capacity
+- Après-ski capacity
+
+### Critical Regions
+
+Some parts of the simulation are critical regions because multiple threads can access and modify the same data at the same time.
+
+Examples include:
+
+- Queue sizes
+- Capacity counters
+- Visitor statistics
+- Event logs
+- Database writes
+
+### Locks
+
+Locks are used to protect shared data and prevent race conditions. This makes sure that two visitors cannot incorrectly update the same resource at the same time.
 
 ## Design Patterns Used
 
+The project uses three main design patterns: State, Strategy, and Observer.
+
 ### State Pattern
 
-The State pattern controls the visitor journey. Each visitor moves through different stages such as arriving, renting, waiting for the lift, riding the lift, going down the slope, visiting the cafe, and exiting.
+The State pattern controls the visitor journey through the resort.
+
+Instead of putting all visitor behavior into one large method, the visitor moves through different states, such as:
+
+- Arriving
+- Renting equipment
+- Waiting for the lift
+- Using the lift
+- Going down the slope
+- Visiting the cafe
+- Visiting the restaurant
+- Visiting après-ski
+- Exiting the resort
+
+This makes the simulation easier to organize, understand, and extend.
 
 ### Strategy Pattern
 
-The Strategy pattern separates skier and snowboarder behavior. Skiers and snowboarders follow the same general resort flow, but they can differ in energy use, cafe probability, and leaving decisions.
+The Strategy pattern separates the behavior of skiers and snowboarders.
+
+Skiers and snowboarders follow the same general resort flow, but they can behave differently in areas such as:
+
+- Energy loss
+- Probability of visiting rest areas
+- Decision to continue or leave
+- Slope behavior
+- Activity patterns
+
+This avoids placing too many if/else statements inside the main visitor logic.
 
 ### Observer Pattern
 
-The Observer pattern is used for tracking simulation events. When something important happens, such as a queue change, waiting time, completed slope run, cafe visit, or fall, the StatsManager records it for the final results and graphs.
+The Observer pattern is used to track simulation events.
 
-## Final Run Results
+When something important happens, such as a queue change, waiting time, completed run, cafe visit, restaurant visit, après-ski visit, or fall, the event is sent to StatsManager.
 
-The final simulation run used:
+This keeps the simulation logic separate from the statistics and reporting logic.
 
-- Visitors: 250
-- Slope runs: 756
-- Cafe visits: 181
-- Falls: 42
-- Skiers: 129
-- Snowboarders: 121
-- Max rental queue: 66
-- Max lift queue: 53
-- Max cafe queue: 4
-- Max slope queue: 0
-- Average rental wait: 4.21 seconds
-- Average lift wait: 1.04 seconds
-- Average cafe wait: 0.02 seconds
+## Metrics Tracked
+
+The simulation tracks several metrics to understand congestion and visitor behavior.
+
+### Queue Metrics
+
+- Maximum rental queue
+- Maximum lift queue
+- Maximum cafe queue
+- Maximum restaurant queue
+- Maximum après-ski queue
+- Maximum slope queue
+
+### Waiting Metrics
+
+- Average rental wait time
+- Average lift wait time
+- Average cafe wait time
+- Average restaurant wait time
+- Average après-ski wait time
+
+### Activity Metrics
+
+- Total slope runs
+- Total cafe visits
+- Total restaurant visits
+- Total après-ski visits
+- Total fall events
+
+### Visitor Metrics
+
+- Number of skiers
+- Number of snowboarders
+- Runs completed per visitor
+- Energy left after the simulation
+- Visitor activity patterns
+
+## Graphs and Output
+
+The simulation generates visual outputs using matplotlib. These graphs help explain the final results and show where congestion happened.
+
+Possible graphs include:
+
+- Main bottleneck queue graph
+- Queue length trend graph
+- Visitor activity summary
+- Visitor type distribution
+- Average recorded wait time
+- Runs completed vs energy left
+- Runs completed vs cafe visits
+- Runs completed by visitor type
+
+These graphs support the final analysis by showing how visitors moved through the resort and which resources became the most congested.
+
+## Main Findings
+
+The simulation showed that congestion happens mainly when many visitors need the same limited resource at the same time.
+
+The biggest bottlenecks are usually found in areas that every visitor must use or that visitors return to multiple times, such as:
+
+- Rental shop
+- Lift station
+
+Other areas, such as the cafe, restaurant, après-ski, and slopes, depend on capacity settings and visitor behavior. If their capacity is high enough, they may not create serious queues. If capacity is reduced, they can also become bottlenecks.
 
 ## Main Conclusion
 
-The rental shop and lift station were the main congestion points.
+This simulation demonstrates how concurrency and shared resources can create congestion in a ski resort.
 
-The rental shop was the strongest bottleneck because every visitor needs equipment before entering the rest of the resort. The lift was the second bottleneck because visitors reuse it after each slope run. The cafe and slope had enough capacity in this simulation run.
+By using threads, locks, design patterns, event tracking, and graphs, the project shows how visitor behavior affects the overall flow of the resort. The results help identify which resources need more capacity or better management to reduce waiting times and improve visitor experience.
 
 ## How to Run
 
