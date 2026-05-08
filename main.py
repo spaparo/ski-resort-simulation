@@ -1,11 +1,14 @@
 import random
 from resort import Resort
+from config import USE_RANDOM_SEED, RANDOM_SEED, RUN_MODE
 
 
 def main():
-    random.seed(42)
+    if USE_RANDOM_SEED:
+        random.seed(RANDOM_SEED)
 
-    print("Starting Ski Resort Simulation...\n")
+    print("Starting Full Ski Resort Simulation...")
+    print(f"Run mode: {RUN_MODE}")
 
     resort = Resort()
     resort.start_simulation()
