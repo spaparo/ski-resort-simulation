@@ -171,7 +171,6 @@ class RentalShop:
         return round(time.time() - start_time, 2)
 
     def rent_equipment(self, visitor):
-        # Critical region: equipment count, staff count, and rental queue are shared by all visitor threads.
         with self.lock:
             can_rent = (
                 self.staff_available > 0
@@ -216,7 +215,6 @@ class RentalShop:
         return True
 
     def return_equipment(self, visitor):
-        # Critical region: equipment count is shared by all visitor threads.
         with self.lock:
             if visitor.visitor_type == "skier":
                 self.skis_available += 1
@@ -268,7 +266,6 @@ class LiftStation:
         return round(time.time() - start_time, 2)
 
     def use_lift(self, visitor):
-        # Critical region: lift capacity and lift queue are shared by all visitor threads.
         with self.lock:
             if self.current >= self.capacity:
                 self._add_to_queue_if_needed(visitor)
@@ -296,7 +293,6 @@ class LiftStation:
         return True
 
     def leave_lift(self):
-        # Critical region: lift capacity is shared by all visitor threads.
         with self.lock:
             if self.current > 0:
                 self.current -= 1
