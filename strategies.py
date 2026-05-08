@@ -72,7 +72,7 @@ class BaseStrategy:
         raise NotImplementedError
 
     def should_leave(self, visitor):
-        if visitor.resort and getattr(visitor.resort, "is_closing", False):
+        if getattr(visitor, "day_phase", "morning") in ["closing", "closed"]:
             return True
         too_tired   = visitor.energy < self._energy_threshold()
         enough_runs = visitor.runs_completed >= visitor.target_runs
