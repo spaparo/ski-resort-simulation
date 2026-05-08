@@ -459,6 +459,7 @@ class Slope:
             self.wait_start_times.pop(visitor.visitor_id, None)
 
         self.notify_observers("run", 1)
+        self.notify_observers("slope_used", self.name)
         _log(visitor, "slope_run", self.name, 0)
 
         run_time = random.uniform(self.run_time_min, self.run_time_max) * _slope_multiplier(visitor)
@@ -527,7 +528,7 @@ class Restaurant:
             wait_time = self._get_wait_time(visitor)
             self._remove_from_queue_if_present(visitor)
 
-        service_time = random.uniform(RESTAURANT_TIME_MIN, RESTAURANT_TIME_MAX) * _service_multiplier(visitor) * _indoor_demand_multiplier(visitor)
+        service_time = random.uniform(RESTAURANT_TIME_MIN, RESTAURANT_TIME_MAX) * _service_multiplier(visitor) * _indoor_weather_multiplier(visitor)
         time.sleep(service_time)
 
         with self.lock:
