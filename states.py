@@ -1,5 +1,10 @@
 import time
 import random
+from config import (
+    SERIOUS_FALL_CHANCE,
+    WEATHER_EFFECTS,
+    AGE_EFFECTS,
+)
 
 
 class State:
@@ -70,7 +75,6 @@ class WaitingLiftState(State):
             visitor.log("resort is closing...leaving the resort.")
             return ExitState()
         visitor.log("is waiting in the lift queue...")
-
         success = visitor.resort.lift_station.use_lift(visitor)
 
         if not success:
@@ -101,7 +105,7 @@ class SlopeState(State):
             return ExitState()
 
         if self.force_beginner:
-            slope_name = "Beginner"
+            slope_name = "Green"
         else:
             slope_name = visitor.strategy.choose_slope(visitor)
 
@@ -142,9 +146,20 @@ class SlopeState(State):
             f"energy used: {cost} — before: {energy_before}/100 — after: {visitor.energy}/100"
         )
 
+        def _is_serious_fall(visitor) -> bool:
+            base = SERIOUS_FALL_CHANCE
+            age_mult = AGE_EFFECTS[visitor.age_group]["fall_multiplier"]
+
+            weather = "sunny"
+            if visitor.resort and hasattr(visitor.resort, "weather"):
+                weather = visitor.resort.weather
+            weather_mult = WEATHER_EFFECTS.get(weather, WEATHER_EFFECTS["sunny"])["fall_multiplier"]
+
+            chance = base * age_mult * weather_mult
+            return random.random() < chance
+
         if fell:
-            serious = _is_serious_fall(visitor)
-            if serious:
+            if _is_serious_fall(visitor):
                 visitor.log("had a SERIOUS fall and needs first aid!")
                 visitor.injury_status = "serious"
                 return FirstAidState()
@@ -171,29 +186,11 @@ class SlopeState(State):
         visitor.log("heading back to the lift!")
         return WaitingLiftState()
 
-    def _is_serious_fall(visitor) -> bool:
-        base_chance = 0.20  # 20% of falls become serious by default
-        if visitor.age_group == "child":
-            base_chance = 0.25
-        elif visitor.age_group == "senior":
-            base_chance = 0.35
-
-        weather = "sunny"
-        if visitor.resort and hasattr(visitor.resort, "weather"):
-            weather = visitor.resort.weather
-        if weather == "stormy":
-            base_chance += 0.15
-        elif weather == "snowy":
-            base_chance += 0.08
-        return random.random() < base_chance
-
-
 class CafeState(State):
     ENERGY_RESTORE = 25
 
     def handle(self, visitor):
         visitor.log("is taking a break at the cafe...")
-
         success = visitor.resort.cafe.visit(visitor)
 
         if not success:
@@ -203,8 +200,8 @@ class CafeState(State):
 
         energy_before = visitor.energy
         visitor.energy = min(100, visitor.energy + self.ENERGY_RESTORE)
-        visitor.cafe_visits += 1
 
+        visitor.cafe_visits += 1
         visitor.log(f"cafe visit #{visitor.cafe_visits} done!")
         visitor.log(f"energy: {energy_before}/100 -> {visitor.energy}/100")
 
@@ -216,6 +213,92 @@ class CafeState(State):
         return WaitingLiftState()
 
 
+class RestaurantState(State):
+    ENERGY_RESTORE = 40
+
+    def handle(self, visitor):
+        visitor.log("is sitting down for lunch at the restaurant...")
+
+        restaurant = getattr(visitor.resort, "restaurant", None)
+        if restaurant is None:
+            visitor.log("no restaurant available...going to the café instead.")
+            return CafeState()
+
+        success = restaurant.visit(visitor)
+        if not success:
+            visitor.log("restaurant is full, waiting for a table...")
+            time.sleep(0.5)
+            return RestaurantState()
+
+        energy_before = visitor.energy
+        visitor.energy = min(100, visitor.energy + self.ENERGY_RESTORE)
+        visitor.restaurant_visits += 1
+        visitor.log(
+            f"restaurant visit #{visitor.restaurant_visits} done! "
+            f"energy: {energy_before:.1f}/100 -> {visitor.energy:.1f}/100"
+        )
+
+        if visitor.strategy.should_leave(visitor):
+            visitor.log("feeling full but still tired. Heading home...")
+            return ExitState()
+
+        visitor.log("full belly! Back to the slopes...")
+        return WaitingLiftState()
+
+
+class ApresSkiState(State):
+    def handle(self, visitor):
+        visitor.log("is enjoying après-ski!")
+
+        apres_ski = getattr(visitor.resort, "apres_ski", None)
+        if apres_ski is None:
+            visitor.log("no après-ski bar yet... heading straight home.")
+            return ExitState()
+
+        success = apres_ski.visit(visitor)
+        if not success:
+            visitor.log("après-ski is packed, skipping it...")
+            return ExitState()
+
+        visitor.apres_ski_visits += 1
+        visitor.log("had a great time at après-ski! Now heading home.")
+        return ExitState()
+
+
+class FirstAidState(State):
+    ENERGY_RESTORE_SERIOUS = 10
+    ENERGY_RESTORE_MINOR = 20
+
+    def handle(self, visitor):
+        is_serious = visitor.injury_status == "serious"
+
+        if is_serious:
+            visitor.log("SERIOUS injury, being rushed to first aid!")
+        else:
+            visitor.log("minor injury, heading to first aid.")
+
+        first_aid = getattr(visitor.resort, "first_aid", None)
+        if first_aid is None:
+            visitor.log("no first aid station, resting and heading home.")
+            time.sleep(1.0)
+            visitor.injury_status = "treated"
+            return ExitState()
+
+
+        first_aid.treat(visitor)
+
+        energy_restore = self.ENERGY_RESTORE_SERIOUS \
+            if is_serious \
+            else self.ENERGY_RESTORE_MINOR
+        energy_before = visitor.energy
+        visitor.energy = min(100, visitor.energy + energy_restore)
+        visitor.injury_status = "treated"
+        visitor.log(
+            f"has been treated! energy: {energy_before:.1f}/100 -> {visitor.energy:.1f}/100"
+        )
+        visitor.log("doctor's orders, going home.")
+        return ExitState()
+
 class ExitState(State):
     def handle(self, visitor):
         visitor.log("is returning equipment and leaving...")
@@ -226,25 +309,30 @@ class ExitState(State):
         visitor.log(
             f"--- SUMMARY --- "
             f"runs: {visitor.runs_completed} | "
-            f"cafe visits: {visitor.cafe_visits} | "
-            f"energy left: {visitor.energy}/100"
+            f"café: {visitor.cafe_visits} | "
+            f"restaurant: {visitor.restaurant_visits} | "
+            f"après-ski: {visitor.apres_ski_visits} | "
+            f"injury: {visitor.injury_status} | "
+            f"energy left: {visitor.energy:.1f}/100"
         )
 
         if visitor.resort is not None:
             visitor.resort.stats.update("visitor_summary", {
+                "type": visitor.visitor_type,
+                "age_group": visitor.age_group,
+                "skill_level": visitor.skill_level,
+                "has_own_equipment": visitor.has_own_equipment,
+                "is_ski_school": visitor.is_ski_school,
                 "runs": visitor.runs_completed,
                 "cafe_visits": visitor.cafe_visits,
+                "restaurant_visits": visitor.restaurant_visits,
+                "apres_ski_visits": visitor.apres_ski_visits,
+                "injury_status": visitor.injury_status,
                 "energy_left": visitor.energy,
-                "type": visitor.visitor_type
             })
-
             visitor.resort.database.log_event(
-                visitor.visitor_id,
-                "completed",
-                "resort",
-                0
+                visitor.visitor_id, "completed", "resort", 0
             )
-
             visitor.resort.database.update_visitor_summary(visitor)
 
         return None
