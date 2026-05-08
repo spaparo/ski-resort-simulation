@@ -223,6 +223,13 @@ class Resort:
     def start_threads(self):
         for index, visitor in enumerate(self.visitors):
             self.phase = self.get_phase(index)
+
+            if index >= LAST_LIFT_VISITOR:
+                if not self.is_closing:
+                    print("\n--- LAST LIFT PERIOD STARTED ---\n")
+                self.is_closing = True
+                self.phase = "closing"
+
             visitor.day_phase = self.phase
             visitor.is_peak_arrival = PEAK_START_VISITOR <= index <= PEAK_END_VISITOR
 
@@ -234,9 +241,6 @@ class Resort:
 
             if index == LUNCH_END_VISITOR:
                 print("\n--- LUNCH PERIOD ENDED ---\n")
-
-            if index == LAST_LIFT_VISITOR:
-                print("\n--- LAST LIFT PERIOD STARTED ---\n")
 
             visitor.start()
 
