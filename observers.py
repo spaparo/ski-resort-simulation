@@ -394,6 +394,8 @@ class StatsManager:
             "restaurant",
             "first_aid",
             "equipment_return",
+            "apres_ski",
+            "ski_school",
             "slope"
         ]
 
